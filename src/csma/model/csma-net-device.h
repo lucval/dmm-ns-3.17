@@ -33,6 +33,8 @@
 #include "ns3/data-rate.h"
 #include "ns3/ptr.h"
 #include "ns3/mac48-address.h"
+#include "ns3/ipv4.h"
+#include "ns3/ipv4-header.h"
 
 namespace ns3 {
 
@@ -717,6 +719,8 @@ private:
    * Ethernet.
    */
   uint32_t m_mtu;
+
+  std::vector<uint64_t> m_received;
 };
 
 } // namespace ns3

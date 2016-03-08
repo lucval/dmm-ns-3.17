@@ -21,6 +21,8 @@
 #ifndef CSMA_CHANNEL_H
 #define CSMA_CHANNEL_H
 
+#include <map>
+
 #include "ns3/channel.h"
 #include "ns3/ptr.h"
 #include "ns3/nstime.h"
@@ -33,10 +35,10 @@ class Packet;
 class CsmaNetDevice;
 
 /**
- * \brief CsmaNetDevice Record 
+ * \brief CsmaNetDevice Record
  *
  * Stores the information related to each net device that is
- * connected to the channel. 
+ * connected to the channel.
  */
 class CsmaDeviceRec {
 public:
@@ -56,7 +58,7 @@ public:
 
 /**
  * Current state of the channel
- */ 
+ */
 enum WireState
 {
   IDLE,            /**< Channel is IDLE, no packet is being transmitted */
@@ -73,7 +75,7 @@ enum WireState
  * take into account the distances between stations or the speed of
  * light to determine collisions.
  */
-class CsmaChannel : public Channel 
+class CsmaChannel : public Channel
 {
 public:
   static TypeId GetTypeId (void);
@@ -181,7 +183,8 @@ public:
    * \return Returns true unless the source was detached before it
    * completed its transmission.
    */
-  bool TransmitEnd ();
+  bool TransmitEnd (void);
+  bool TransmitEnd (uint32_t srcId);
 
   /**
    * \brief Indicates that the channel has finished propagating the
@@ -306,14 +309,16 @@ private:
    * packet to have been transmitted on the channel if the channel is
    * free.)
    */
-  Ptr<Packet> m_currentPkt;
+  //Ptr<Packet> m_currentPkt;
 
   /**
    * Device Id of the source that is currently transmitting on the
    * channel. Or last source to have transmitted a packet on the
    * channel, if the channel is currently not busy.
    */
-  uint32_t                            m_currentSrc;
+  //uint32_t                            m_currentSrc;
+
+  std::map<uint32_t, Ptr<Packet> > m_current;
 
   /**
    * Current state of the channel
