@@ -25,9 +25,13 @@
 
 #include <ns3/object.h>
 #include <ns3/ipv4-address-helper.h>
+#include <ns3/ipv4-static-routing-helper.h>
+#include <ns3/point-to-point-helper.h>
 #include <ns3/data-rate.h>
 #include <ns3/epc-tft.h>
 #include <ns3/eps-bearer.h>
+#include <ns3/virtual-net-device.h>
+#include <ns3/mac48-address.h>
 
 namespace ns3 {
 
@@ -44,30 +48,37 @@ class EpcMme;
  * This Helper will create an EPC network topology comprising of a
  * single node that implements both the SGW and PGW functionality, and
  * is connected to all the eNBs in the simulation by means of the S1-U
- * interface. 
+ * interface.
  */
 class EpcHelper : public Object
 {
 public:
-  
-  /** 
-   * Constructor
+
+  /**
+   * Constructors
    */
   EpcHelper ();
+  EpcHelper (Ptr<Node> pgw);
+  EpcHelper (Ipv4AddressHelper pgwPool, Ipv4AddressHelper s1Pool,
+             Ipv4AddressHelper x2Pool, Ptr<Node> pgw);
 
-  /** 
+  /**
    * Destructor
-   */  
+   */
   virtual ~EpcHelper ();
-  
+
   // inherited from Object
   static TypeId GetTypeId (void);
   virtual void DoDispose ();
 
-  
-  /** 
+  Ipv4AddressHelper AddTunDevice(Ipv4AddressHelper ipv4ah);
+
+  Ipv4AddressHelper GetHelper (void);
+  void ReSetHelper (Ipv4AddressHelper h);
+
+  /**
    * Add an eNB to the EPC
-   * 
+   *
    * \param enbNode the previosuly created eNB node which is to be
    * added to the EPC
    * \param lteEnbNetDevice the LteEnbNetDevice of the eNB node
@@ -75,27 +86,27 @@ public:
    */
   void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice, uint16_t cellId);
 
-  /** 
+  /**
    * Notify the EPC of the existance of a new UE which might attach at a later time
-   * 
+   *
    * \param ueLteDevice the UE device to be attached
    * \param imsi the unique identifier of the UE
    */
   void AddUe (Ptr<NetDevice> ueLteDevice, uint64_t imsi);
 
-  /** 
+  /**
    * Add an X2 interface between two eNB
-   * 
+   *
    * \param enbNode1 one eNB peer of the X2 interface
    * \param enbNode2 the other eNB peer of the X2 interface
    */
   void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
 
-  /** 
+  /**
    * Activate an EPS bearer, setting up the corresponding S1-U tunnel.
-   * 
-   * 
-   * 
+   *
+   *
+   *
    * \param ueLteDevice the Ipv4-enabled device of the UE, normally
    * connected via the LTE radio interface
    * \param imsi the unique identifier of the UE
@@ -104,9 +115,10 @@ public:
    */
   void ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer);
 
+  void ModifyBearer(uint64_t imsi, Ipv4Address ueAddr, Ptr<EpcTft> tft, EpsBearer bearer);
 
-  /** 
-   * 
+  /**
+   *
    * \return a pointer to the node implementing PGW
    * functionality. Note that in this particular implementation this
    * node will also hold the SGW functionality. The primary use
@@ -115,23 +127,34 @@ public:
    */
   Ptr<Node> GetPgwNode ();
 
-  /** 
+  /**
    * Assign IPv4 addresses to UE devices
-   * 
+   *
    * \param ueDevices the set of UE devices
-   * 
+   *
    * \return the interface container, \see Ipv4AddressHelper::Assign() which has similar semantics
    */
   Ipv4InterfaceContainer AssignUeIpv4Address (NetDeviceContainer ueDevices);
 
-
-  /** 
-   * 
+  /**
+   *
    * \return the address of the Default Gateway to be used by UEs to reach the internet
    */
   Ipv4Address GetUeDefaultGatewayAddress ();
 
+  /**
+   * Attaches the UE to the serving P-GW (i.e. assign IP address to the user and setup routing path towards P-GW)
+   *
+   *
+   * \param ueDevice the network device of the UE
+   */
+  Ipv4Address Attach (Ptr<NetDevice> ueDevice);
 
+  void SetContainer(const NodeContainer &c);
+
+  uint16_t GetLastRnti(void);
+
+  Mac48Address m_mac;
 
 private:
 
@@ -139,12 +162,12 @@ private:
    * SGW-PGW network element
    */
 
-  /** 
+  /**
    * helper to assign addresses to UE devices as well as to the TUN device of the SGW/PGW
    */
-  Ipv4AddressHelper m_ueAddressHelper; 
-  
-  Ptr<Node> m_sgwPgw; 
+  Ipv4AddressHelper m_ueAddressHelper;
+
+  Ptr<Node> m_sgwPgw;
   Ptr<EpcSgwPgwApplication> m_sgwPgwApp;
   Ptr<VirtualNetDevice> m_tunDevice;
   Ptr<EpcMme> m_mme;
@@ -153,10 +176,10 @@ private:
    * S1-U interfaces
    */
 
-  /** 
-   * helper to assign addresses to S1-U NetDevices 
+  /**
+   * helper to assign addresses to S1-U NetDevices
    */
-  Ipv4AddressHelper m_s1uIpv4AddressHelper; 
+  Ipv4AddressHelper m_s1uIpv4AddressHelper;
 
   DataRate m_s1uLinkDataRate;
   Time     m_s1uLinkDelay;
@@ -169,22 +192,25 @@ private:
 
   /**
    * Map storing for each IMSI the corresponding eNB NetDevice
-   * 
+   *
    */
   std::map<uint64_t, Ptr<NetDevice> > m_imsiEnbDeviceMap;
-  
-  /** 
-   * helper to assign addresses to X2 NetDevices 
+
+  /**
+   * helper to assign addresses to X2 NetDevices
    */
-  Ipv4AddressHelper m_x2Ipv4AddressHelper;   
+  Ipv4AddressHelper m_x2Ipv4AddressHelper;
+
+  Ipv4StaticRoutingHelper m_ipv4srh;
 
   DataRate m_x2LinkDataRate;
   Time     m_x2LinkDelay;
   uint16_t m_x2LinkMtu;
-
+  uint16_t m_current;
+  uint16_t m_count;
+  NodeContainer m_ues;
+  NetDeviceContainer m_ofDevs;
 };
-
-
 
 
 } // namespace ns3

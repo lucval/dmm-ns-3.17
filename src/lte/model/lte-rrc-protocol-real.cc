@@ -38,7 +38,7 @@ NS_LOG_COMPONENT_DEFINE ("LteRrcProtocolReal");
 namespace ns3 {
 
 
-const Time RRC_REAL_MSG_DELAY = MilliSeconds (0); 
+const Time RRC_REAL_MSG_DELAY = MilliSeconds (0);
 
 NS_OBJECT_ENSURE_REGISTERED (LteUeRrcProtocolReal);
 
@@ -48,7 +48,7 @@ LteUeRrcProtocolReal::LteUeRrcProtocolReal ()
 {
   m_ueRrcSapUser = new MemberLteUeRrcSapUser<LteUeRrcProtocolReal> (this);
   m_completeSetupParameters.srb0SapUser = new LteRlcSpecificLteRlcSapUser<LteUeRrcProtocolReal> (this);
-  m_completeSetupParameters.srb1SapUser = new LtePdcpSpecificLtePdcpSapUser<LteUeRrcProtocolReal> (this);    
+  m_completeSetupParameters.srb1SapUser = new LtePdcpSpecificLtePdcpSapUser<LteUeRrcProtocolReal> (this);
 }
 
 LteUeRrcProtocolReal::~LteUeRrcProtocolReal ()
@@ -75,35 +75,35 @@ LteUeRrcProtocolReal::GetTypeId (void)
   return tid;
 }
 
-void 
+void
 LteUeRrcProtocolReal::SetLteUeRrcSapProvider (LteUeRrcSapProvider* p)
 {
   m_ueRrcSapProvider = p;
 }
 
-LteUeRrcSapUser* 
+LteUeRrcSapUser*
 LteUeRrcProtocolReal::GetLteUeRrcSapUser ()
 {
   return m_ueRrcSapUser;
 }
 
-void 
+void
 LteUeRrcProtocolReal::SetUeRrc (Ptr<LteUeRrc> rrc)
 {
   m_rrc = rrc;
 }
 
-void 
+void
 LteUeRrcProtocolReal::DoSetup (LteUeRrcSapUser::SetupParameters params)
 {
   NS_LOG_FUNCTION (this);
 
   m_setupParameters.srb0SapProvider = params.srb0SapProvider;
-  m_setupParameters.srb1SapProvider = params.srb1SapProvider; 
+  m_setupParameters.srb1SapProvider = params.srb1SapProvider;
   m_ueRrcSapProvider->CompleteSetup (m_completeSetupParameters);
 }
 
-void 
+void
 LteUeRrcProtocolReal::DoSendRrcConnectionRequest (LteRrcSap::RrcConnectionRequest msg)
 {
   // initialize the RNTI and get the EnbLteRrcSapProvider for the
@@ -126,7 +126,7 @@ LteUeRrcProtocolReal::DoSendRrcConnectionRequest (LteRrcSap::RrcConnectionReques
   m_setupParameters.srb0SapProvider->TransmitPdcpPdu (transmitPdcpPduParameters);
 }
 
-void 
+void
 LteUeRrcProtocolReal::DoSendRrcConnectionSetupCompleted (LteRrcSap::RrcConnectionSetupCompleted msg)
 {
   Ptr<Packet> packet = Create<Packet> ();
@@ -147,7 +147,7 @@ LteUeRrcProtocolReal::DoSendRrcConnectionSetupCompleted (LteRrcSap::RrcConnectio
     }
 }
 
-void 
+void
 LteUeRrcProtocolReal::DoSendRrcConnectionReconfigurationCompleted (LteRrcSap::RrcConnectionReconfigurationCompleted msg)
 {
   // re-initialize the RNTI and get the EnbLteRrcSapProvider for the
@@ -170,7 +170,7 @@ LteUeRrcProtocolReal::DoSendRrcConnectionReconfigurationCompleted (LteRrcSap::Rr
   m_setupParameters.srb1SapProvider->TransmitPdcpSdu (transmitPdcpSduParameters);
 }
 
-void 
+void
 LteUeRrcProtocolReal::DoSendMeasurementReport (LteRrcSap::MeasurementReport msg)
 {
   // re-initialize the RNTI and get the EnbLteRrcSapProvider for the
@@ -193,7 +193,7 @@ LteUeRrcProtocolReal::DoSendMeasurementReport (LteRrcSap::MeasurementReport msg)
   m_setupParameters.srb1SapProvider->TransmitPdcpSdu (transmitPdcpSduParameters);
 }
 
-void 
+void
 LteUeRrcProtocolReal::DoSendRrcConnectionReestablishmentRequest (LteRrcSap::RrcConnectionReestablishmentRequest msg)
 {
   Ptr<Packet> packet = Create<Packet> ();
@@ -211,7 +211,7 @@ LteUeRrcProtocolReal::DoSendRrcConnectionReestablishmentRequest (LteRrcSap::RrcC
   m_setupParameters.srb0SapProvider->TransmitPdcpPdu (transmitPdcpPduParameters);
 }
 
-void 
+void
 LteUeRrcProtocolReal::DoSendRrcConnectionReestablishmentComplete (LteRrcSap::RrcConnectionReestablishmentComplete msg)
 {
   Ptr<Packet> packet = Create<Packet> ();
@@ -230,7 +230,7 @@ LteUeRrcProtocolReal::DoSendRrcConnectionReestablishmentComplete (LteRrcSap::Rrc
 }
 
 
-void 
+void
 LteUeRrcProtocolReal::SetEnbRrcSapProvider ()
 {
   uint16_t cellId = m_rrc->GetCellId ();
@@ -239,13 +239,13 @@ LteUeRrcProtocolReal::SetEnbRrcSapProvider ()
   Ptr<LteEnbNetDevice> enbDev;
   NodeList::Iterator listEnd = NodeList::End ();
   bool found = false;
-  for (NodeList::Iterator i = NodeList::Begin (); 
-       (i != listEnd) && (!found); 
+  for (NodeList::Iterator i = NodeList::Begin ();
+       (i != listEnd) && (!found);
        ++i)
     {
       Ptr<Node> node = *i;
       int nDevs = node->GetNDevices ();
-      for (int j = 0; 
+      for (int j = 0;
            (j < nDevs) && (!found);
            j++)
         {
@@ -369,11 +369,11 @@ LteEnbRrcProtocolReal::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   delete m_enbRrcSapUser;
-  for (std::map<uint16_t, LteEnbRrcSapProvider::CompleteSetupUeParameters>::iterator 
+  for (std::map<uint16_t, LteEnbRrcSapProvider::CompleteSetupUeParameters>::iterator
          it = m_completeSetupUeParametersMap.begin ();
        it != m_completeSetupUeParametersMap.end ();
        ++it)
-    {     
+    {
       delete it->second.srb0SapUser;
       delete it->second.srb1SapUser;
     }
@@ -390,25 +390,25 @@ LteEnbRrcProtocolReal::GetTypeId (void)
   return tid;
 }
 
-void 
+void
 LteEnbRrcProtocolReal::SetLteEnbRrcSapProvider (LteEnbRrcSapProvider* p)
 {
   m_enbRrcSapProvider = p;
 }
 
-LteEnbRrcSapUser* 
+LteEnbRrcSapUser*
 LteEnbRrcProtocolReal::GetLteEnbRrcSapUser ()
 {
   return m_enbRrcSapUser;
 }
 
-void 
+void
 LteEnbRrcProtocolReal::SetCellId (uint16_t cellId)
 {
   m_cellId = cellId;
 }
 
-LteUeRrcSapProvider* 
+LteUeRrcSapProvider*
 LteEnbRrcProtocolReal::GetUeRrcSapProvider (uint16_t rnti)
 {
   std::map<uint16_t, LteUeRrcSapProvider*>::const_iterator it;
@@ -417,7 +417,7 @@ LteEnbRrcProtocolReal::GetUeRrcSapProvider (uint16_t rnti)
   return it->second;
 }
 
-void 
+void
 LteEnbRrcProtocolReal::SetUeRrcSapProvider (uint16_t rnti, LteUeRrcSapProvider* p)
 {
   std::map<uint16_t, LteUeRrcSapProvider*>::iterator it;
@@ -426,7 +426,7 @@ LteEnbRrcProtocolReal::SetUeRrcSapProvider (uint16_t rnti, LteUeRrcSapProvider* 
   it->second = p;
 }
 
-void 
+void
 LteEnbRrcProtocolReal::DoSetupUe (uint16_t rnti, LteEnbRrcSapUser::SetupUeParameters params)
 {
   NS_LOG_FUNCTION (this << rnti);
@@ -462,14 +462,14 @@ LteEnbRrcProtocolReal::DoSetupUe (uint16_t rnti, LteEnbRrcSapUser::SetupUeParame
 
   // just create empty entry, the UeRrcSapProvider will be set by the
   // ue upon connection request or connection reconfiguration
-  // completed 
+  // completed
   m_enbRrcSapProviderMap[rnti] = 0;
 
   // Store SetupUeParameters
   m_setupUeParametersMap[rnti] = params;
 
   LteEnbRrcSapProvider::CompleteSetupUeParameters completeSetupUeParameters;
-  std::map<uint16_t, LteEnbRrcSapProvider::CompleteSetupUeParameters>::iterator 
+  std::map<uint16_t, LteEnbRrcSapProvider::CompleteSetupUeParameters>::iterator
     csupIt = m_completeSetupUeParametersMap.find (rnti);
   if (csupIt == m_completeSetupUeParametersMap.end ())
     {
@@ -479,7 +479,7 @@ LteEnbRrcProtocolReal::DoSetupUe (uint16_t rnti, LteEnbRrcSapUser::SetupUeParame
       completeSetupUeParameters.srb0SapUser = srb0SapUser;
       completeSetupUeParameters.srb1SapUser = srb1SapUser;
       // Store LteRlcSapUser, LtePdcpSapUser
-      m_completeSetupUeParametersMap[rnti] = completeSetupUeParameters;      
+      m_completeSetupUeParametersMap[rnti] = completeSetupUeParameters;
     }
   else
     {
@@ -488,11 +488,11 @@ LteEnbRrcProtocolReal::DoSetupUe (uint16_t rnti, LteEnbRrcSapUser::SetupUeParame
   m_enbRrcSapProvider->CompleteSetupUe (rnti, completeSetupUeParameters);
 }
 
-void 
+void
 LteEnbRrcProtocolReal::DoRemoveUe (uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << rnti);
-  std::map<uint16_t, LteEnbRrcSapProvider::CompleteSetupUeParameters>::iterator 
+  std::map<uint16_t, LteEnbRrcSapProvider::CompleteSetupUeParameters>::iterator
     it = m_completeSetupUeParametersMap.find (rnti);
   NS_ASSERT (it != m_completeSetupUeParametersMap.end ());
   delete it->second.srb0SapUser;
@@ -502,7 +502,7 @@ LteEnbRrcProtocolReal::DoRemoveUe (uint16_t rnti)
   m_setupUeParametersMap.erase (rnti);
 }
 
-void 
+void
 LteEnbRrcProtocolReal::DoSendMasterInformationBlock (LteRrcSap::MasterInformationBlock msg)
 {
   NS_LOG_FUNCTION (this);
@@ -510,14 +510,14 @@ LteEnbRrcProtocolReal::DoSendMasterInformationBlock (LteRrcSap::MasterInformatio
        it != m_enbRrcSapProviderMap.end ();
        ++it)
     {
-      Simulator::Schedule (RRC_REAL_MSG_DELAY, 
+      Simulator::Schedule (RRC_REAL_MSG_DELAY,
                            &LteUeRrcSapProvider::RecvMasterInformationBlock,
-                           it->second, 
+                           it->second,
                            msg);
     }
 }
 
-void 
+void
 LteEnbRrcProtocolReal::DoSendSystemInformationBlockType1 (LteRrcSap::SystemInformationBlockType1 msg)
 {
   NS_LOG_FUNCTION (this << m_cellId);
@@ -536,17 +536,17 @@ LteEnbRrcProtocolReal::DoSendSystemInformationBlockType1 (LteRrcSap::SystemInfor
               Ptr<LteUeRrc> ueRrc = ueDev->GetRrc ();
               if (ueRrc->GetCellId () == m_cellId)
                 {
-                  Simulator::Schedule (RRC_REAL_MSG_DELAY, 
+                  Simulator::Schedule (RRC_REAL_MSG_DELAY,
                                        &LteUeRrcSapProvider::RecvSystemInformationBlockType1,
-                                       ueRrc->GetLteUeRrcSapProvider (), 
+                                       ueRrc->GetLteUeRrcSapProvider (),
                                        msg);
                 }
             }
         }
-    } 
+    }
 }
 
-void 
+void
 LteEnbRrcProtocolReal::DoSendSystemInformation (LteRrcSap::SystemInformation msg)
 {
   NS_LOG_FUNCTION (this << m_cellId);
@@ -567,17 +567,17 @@ LteEnbRrcProtocolReal::DoSendSystemInformation (LteRrcSap::SystemInformation msg
                 {
                   NS_LOG_LOGIC ("sending SI to IMSI " << ueDev->GetImsi ());
                   ueRrc->GetLteUeRrcSapProvider ()->RecvSystemInformation (msg);
-                  Simulator::Schedule (RRC_REAL_MSG_DELAY, 
+                  Simulator::Schedule (RRC_REAL_MSG_DELAY,
                                        &LteUeRrcSapProvider::RecvSystemInformation,
-                                       ueRrc->GetLteUeRrcSapProvider (), 
+                                       ueRrc->GetLteUeRrcSapProvider (),
                                        msg);
                 }
             }
         }
-    } 
+    }
 }
 
-void 
+void
 LteEnbRrcProtocolReal::DoSendRrcConnectionSetup (uint16_t rnti, LteRrcSap::RrcConnectionSetup msg)
 {
   Ptr<Packet> packet = Create<Packet> ();
@@ -602,7 +602,7 @@ LteEnbRrcProtocolReal::DoSendRrcConnectionSetup (uint16_t rnti, LteRrcSap::RrcCo
     }
 }
 
-void 
+void
 LteEnbRrcProtocolReal::DoSendRrcConnectionReject (uint16_t rnti, LteRrcSap::RrcConnectionReject msg)
 {
   Ptr<Packet> packet = Create<Packet> ();
@@ -620,7 +620,7 @@ LteEnbRrcProtocolReal::DoSendRrcConnectionReject (uint16_t rnti, LteRrcSap::RrcC
   m_setupUeParametersMap[rnti].srb0SapProvider->TransmitPdcpPdu (transmitPdcpPduParameters);
 }
 
-void 
+void
 LteEnbRrcProtocolReal::DoSendRrcConnectionReconfiguration (uint16_t rnti, LteRrcSap::RrcConnectionReconfiguration msg)
 {
   Ptr<Packet> packet = Create<Packet> ();
@@ -638,7 +638,7 @@ LteEnbRrcProtocolReal::DoSendRrcConnectionReconfiguration (uint16_t rnti, LteRrc
   m_setupUeParametersMap[rnti].srb1SapProvider->TransmitPdcpSdu (transmitPdcpSduParameters);
 }
 
-void 
+void
 LteEnbRrcProtocolReal::DoSendRrcConnectionReestablishment (uint16_t rnti, LteRrcSap::RrcConnectionReestablishment msg)
 {
   Ptr<Packet> packet = Create<Packet> ();
@@ -656,7 +656,7 @@ LteEnbRrcProtocolReal::DoSendRrcConnectionReestablishment (uint16_t rnti, LteRrc
   m_setupUeParametersMap[rnti].srb0SapProvider->TransmitPdcpPdu (transmitPdcpPduParameters);
 }
 
-void 
+void
 LteEnbRrcProtocolReal::DoSendRrcConnectionReestablishmentReject (uint16_t rnti, LteRrcSap::RrcConnectionReestablishmentReject msg)
 {
   Ptr<Packet> packet = Create<Packet> ();
@@ -674,7 +674,7 @@ LteEnbRrcProtocolReal::DoSendRrcConnectionReestablishmentReject (uint16_t rnti, 
   m_setupUeParametersMap[rnti].srb0SapProvider->TransmitPdcpPdu (transmitPdcpPduParameters);
 }
 
-void 
+void
 LteEnbRrcProtocolReal::DoSendRrcConnectionRelease (uint16_t rnti, LteRrcSap::RrcConnectionRelease msg)
 {
   Ptr<Packet> packet = Create<Packet> ();
@@ -766,7 +766,7 @@ LteEnbRrcProtocolReal::DoReceivePdcpSdu (LtePdcpSapUser::ReceivePdcpSduParameter
     }
 }
 
-Ptr<Packet> 
+Ptr<Packet>
 LteEnbRrcProtocolReal::DoEncodeHandoverPreparationInformation (LteRrcSap::HandoverPreparationInfo msg)
 {
   HandoverPreparationInfoHeader h;
@@ -777,7 +777,7 @@ LteEnbRrcProtocolReal::DoEncodeHandoverPreparationInformation (LteRrcSap::Handov
   return p;
 }
 
-LteRrcSap::HandoverPreparationInfo 
+LteRrcSap::HandoverPreparationInfo
 LteEnbRrcProtocolReal::DoDecodeHandoverPreparationInformation (Ptr<Packet> p)
 {
   HandoverPreparationInfoHeader h;
@@ -786,7 +786,7 @@ LteEnbRrcProtocolReal::DoDecodeHandoverPreparationInformation (Ptr<Packet> p)
   return msg;
 }
 
-Ptr<Packet> 
+Ptr<Packet>
 LteEnbRrcProtocolReal::DoEncodeHandoverCommand (LteRrcSap::RrcConnectionReconfiguration msg)
 {
   RrcConnectionReconfigurationHeader h;

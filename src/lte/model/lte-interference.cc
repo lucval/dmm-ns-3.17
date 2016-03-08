@@ -44,7 +44,7 @@ LteInterference::~LteInterference ()
   NS_LOG_FUNCTION (this);
 }
 
-void 
+void
 LteInterference::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
@@ -55,7 +55,7 @@ LteInterference::DoDispose ()
   m_allSignals = 0;
   m_noise = 0;
   Object::DoDispose ();
-} 
+}
 
 
 TypeId
@@ -70,7 +70,7 @@ LteInterference::GetTypeId (void)
 
 void
 LteInterference::StartRx (Ptr<const SpectrumValue> rxPsd)
-{ 
+{
   NS_LOG_FUNCTION (this << *rxPsd);
   if (m_receiving == false)
     {
@@ -84,7 +84,7 @@ LteInterference::StartRx (Ptr<const SpectrumValue> rxPsd)
         }
       for (std::list<Ptr<LteSinrChunkProcessor> >::const_iterator it = m_sinrChunkProcessorList.begin (); it != m_sinrChunkProcessorList.end (); ++it)
         {
-          (*it)->Start (); 
+          (*it)->Start ();
         }
       for (std::list<Ptr<LteSinrChunkProcessor> >::const_iterator it = m_interfChunkProcessorList.begin (); it != m_interfChunkProcessorList.end (); ++it)
         {
@@ -121,7 +121,7 @@ LteInterference::EndRx ()
         }
       for (std::list<Ptr<LteSinrChunkProcessor> >::const_iterator it = m_sinrChunkProcessorList.begin (); it != m_sinrChunkProcessorList.end (); ++it)
         {
-          (*it)->End (); 
+          (*it)->End ();
         }
       for (std::list<Ptr<LteSinrChunkProcessor> >::const_iterator it = m_interfChunkProcessorList.begin (); it != m_interfChunkProcessorList.end (); ++it)
         {
@@ -152,7 +152,7 @@ LteInterference::AddSignal (Ptr<const SpectrumValue> spd, const Time duration)
 
 void
 LteInterference::DoAddSignal  (Ptr<const SpectrumValue> spd)
-{ 
+{
   NS_LOG_FUNCTION (this << *spd);
   ConditionallyEvaluateChunk ();
   (*m_allSignals) += (*spd);
@@ -160,12 +160,12 @@ LteInterference::DoAddSignal  (Ptr<const SpectrumValue> spd)
 
 void
 LteInterference::DoSubtractSignal  (Ptr<const SpectrumValue> spd, uint32_t signalId)
-{ 
+{
   NS_LOG_FUNCTION (this << *spd);
-  ConditionallyEvaluateChunk ();   
+  ConditionallyEvaluateChunk ();
   int32_t deltaSignalId = signalId - m_lastSignalIdBeforeReset;
   if (deltaSignalId > 0)
-    {   
+    {
       (*m_allSignals) -= (*spd);
     }
   else
@@ -228,7 +228,7 @@ LteInterference::SetNoisePowerSpectralDensity (Ptr<const SpectrumValue> noisePsd
       m_receiving = false;
     }
   // record the last SignalId so that we can ignore all signals that
-  // were scheduled for subtraction before m_allSignal 
+  // were scheduled for subtraction before m_allSignal
   m_lastSignalIdBeforeReset = m_lastSignalId;
 }
 

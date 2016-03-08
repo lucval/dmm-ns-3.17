@@ -54,7 +54,7 @@ NS_OBJECT_ENSURE_REGISTERED (LteEnbPhy);
 // = 0.001 / 14 * 11 (fixed to 11 symbols) -1ns as margin to avoid overlapping simulator events
 static const Time DL_DATA_DURATION = NanoSeconds (785714 -1);
 
-//  delay from subframe start to transmission of the data in DL 
+//  delay from subframe start to transmission of the data in DL
 // = 0.001 / 14 * 3 (ctrl fixed to 3 symbols)
 static const Time DL_CTRL_DELAY_FROM_SUBFRAME_START = NanoSeconds (214286);
 
@@ -74,7 +74,7 @@ public:
   virtual void SetCellId (uint16_t cellId);
   virtual void SendLteControlMessage (Ptr<LteControlMessage> msg);
   virtual uint8_t GetMacChTtiDelay ();
-  
+
 
 private:
   LteEnbPhy* m_phy;
@@ -156,7 +156,7 @@ LteEnbPhy::GetTypeId (void)
     .AddAttribute ("TxPower",
                    "Transmission power in dBm",
                    DoubleValue (30.0),
-                   MakeDoubleAccessor (&LteEnbPhy::SetTxPower, 
+                   MakeDoubleAccessor (&LteEnbPhy::SetTxPower,
                                        &LteEnbPhy::GetTxPower),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("NoiseFigure",
@@ -168,13 +168,13 @@ LteEnbPhy::GetTypeId (void)
                    " are connected to sources at the standard noise temperature T0.\" "
                    "In this model, we consider T0 = 290K.",
                    DoubleValue (5.0),
-                   MakeDoubleAccessor (&LteEnbPhy::SetNoiseFigure, 
+                   MakeDoubleAccessor (&LteEnbPhy::SetNoiseFigure,
                                        &LteEnbPhy::GetNoiseFigure),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("MacToChannelDelay",
                    "The delay in TTI units that occurs between a scheduling decision in the MAC and the actual start of the transmission by the PHY. This is intended to be used to model the latency of real PHY and MAC implementations.",
                    UintegerValue (2),
-                   MakeUintegerAccessor (&LteEnbPhy::SetMacChDelay, 
+                   MakeUintegerAccessor (&LteEnbPhy::SetMacChDelay,
                                          &LteEnbPhy::GetMacChDelay),
                    MakeUintegerChecker<uint8_t> ())
     .AddTraceSource ("ReportUeSinr",
@@ -457,7 +457,7 @@ LteEnbPhy::ReceiveLteControlMessageList (std::list<Ptr<LteControlMessage> > msgL
             m_enbPhySapUser->ReceiveRachPreamble (rachPreamble->GetRapId ());
           }
           break;
-          
+
         default:
           m_enbPhySapUser->ReceiveLteControlMessage (*it);
           break;
@@ -493,7 +493,7 @@ LteEnbPhy::StartSubFrame (void)
 
   ++m_nrSubFrames;
   if (m_srsPeriodicity>0)
-    { 
+    {
       // might be 0 in case the eNB has no UEs attached
         NS_ASSERT_MSG (m_nrFrames > 1, "the SRS index check code assumes that frameNo starts at 1");
       NS_ASSERT_MSG (m_nrSubFrames > 0 && m_nrSubFrames <= 10, "the SRS index check code assumes that subframeNo starts at 1");
@@ -501,7 +501,7 @@ LteEnbPhy::StartSubFrame (void)
     }
   NS_LOG_INFO ("-----sub frame " << m_nrSubFrames << "-----");
   m_harqPhyModule->SubframeIndication (m_nrFrames, m_nrSubFrames);
-  
+
   // update info on TB to be received
   std::list<UlDciLteControlMessage> uldcilist = DequeueUlDci ();
   std::list<UlDciLteControlMessage>::iterator dciIt = uldcilist.begin ();
@@ -510,14 +510,14 @@ LteEnbPhy::StartSubFrame (void)
     {
       std::set <uint16_t>::iterator it2;
       it2 = m_ueAttached.find ((*dciIt).GetDci ().m_rnti);
-      
+
       if (it2 == m_ueAttached.end ())
         {
           NS_LOG_ERROR ("UE not attached");
         }
       else
         {
-          // send info of TB to LteSpectrumPhy 
+          // send info of TB to LteSpectrumPhy
           // translate to allocation map
           std::vector <int> rbMap;
           for (int i = (*dciIt).GetDci ().m_rbStart; i < (*dciIt).GetDci ().m_rbStart + (*dciIt).GetDci ().m_rbLen; i++)
@@ -580,7 +580,7 @@ LteEnbPhy::StartSubFrame (void)
                   params.m_ndi = dci->GetDci ().m_ndi.at (i);
                   m_dlPhyTransmission (params);
                 }
-              
+
             }
           else if (msg->GetMessageType () == LteControlMessage::UL_DCI)
             {
@@ -617,9 +617,9 @@ LteEnbPhy::StartSubFrame (void)
 
         }
     }
-    
+
   SendControlChannels (ctrlMsg);
-  
+
   // send data frame
   Ptr<PacketBurst> pb = GetPacketBurst ();
   if (pb)
@@ -651,7 +651,7 @@ LteEnbPhy::SendControlChannels (std::list<Ptr<LteControlMessage> > ctrlMsgList)
   SetDownlinkSubChannels (dlRb);
   NS_LOG_LOGIC (this << " eNB start TX CTRL");
   m_downlinkSpectrumPhy->StartTxDlCtrlFrame (ctrlMsgList);
-  
+
 }
 
 void
@@ -690,7 +690,7 @@ LteEnbPhy::EndFrame (void)
 }
 
 
-void 
+void
 LteEnbPhy::GenerateCtrlCqiReport (const SpectrumValue& sinr)
 {
   NS_LOG_FUNCTION (this << sinr << Simulator::Now () << m_srsStartTime);
@@ -749,7 +749,7 @@ LteEnbPhy::CreatePuschCqiReport (const SpectrumValue& sinr)
       i++;
     }
   return (ulcqi);
-	
+
 }
 
 
@@ -776,7 +776,7 @@ LteEnbPhy::DoSetBandwidth (uint8_t ulBandwidth, uint8_t dlBandwidth)
     }
 }
 
-void 
+void
 LteEnbPhy::DoSetEarfcn (uint16_t ulEarfcn, uint16_t dlEarfcn)
 {
   NS_LOG_FUNCTION (this << ulEarfcn << dlEarfcn);
@@ -785,20 +785,20 @@ LteEnbPhy::DoSetEarfcn (uint16_t ulEarfcn, uint16_t dlEarfcn)
 }
 
 
-void 
+void
 LteEnbPhy::DoAddUe (uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << rnti);
- 
+
   bool success = AddUePhy (rnti);
   NS_ASSERT_MSG (success, "AddUePhy() failed");
 }
 
-void 
+void
 LteEnbPhy::DoRemoveUe (uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << rnti);
- 
+
   bool success = DeleteUePhy (rnti);
   NS_ASSERT_MSG (success, "DeleteUePhy() failed");
 }
@@ -834,7 +834,7 @@ LteEnbPhy::CreateSrsCqiReport (const SpectrumValue& sinr)
   // call SRS tracing method
   CreateSrsReport (m_srsUeOffset.at (m_currentSrsOffset), srsSum / i);
   return (ulcqi);
-  
+
 }
 
 
@@ -922,11 +922,11 @@ LteEnbPhy::DoSetSrsConfigurationIndex (uint16_t  rnti, uint16_t srcCi)
       m_srsCounter.insert (std::pair<uint16_t, uint16_t> (rnti, GetSrsSubframeOffset (srcCi) + 1));
     }
   m_srsUeOffset.at (GetSrsSubframeOffset (srcCi)) = rnti;
-    
+
 }
 
 
-void 
+void
 LteEnbPhy::DoSetMasterInformationBlock (LteRrcSap::MasterInformationBlock mib)
 {
   NS_LOG_FUNCTION (this);

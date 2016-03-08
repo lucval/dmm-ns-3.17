@@ -35,13 +35,13 @@ namespace ns3 {
 
 
 
-const char* g_ueNasStateName[EpcUeNas::NUM_STATES] = 
+const char* g_ueNasStateName[EpcUeNas::NUM_STATES] =
   {
       "OFF",
       "ATTACHING",
       "IDLE_REGISTERED",
       "CONNECTING_TO_EPC",
-      "ACTIVE "    
+      "ACTIVE "
   };
 
 std::string ToString (EpcUeNas::State s)
@@ -73,7 +73,7 @@ void
 EpcUeNas::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  delete m_asSapUser;  
+  delete m_asSapUser;
 }
 
 TypeId
@@ -89,13 +89,13 @@ EpcUeNas::GetTypeId (void)
   return tid;
 }
 
-void 
+void
 EpcUeNas::SetDevice (Ptr<NetDevice> dev)
 {
   m_device = dev;
 }
 
-void 
+void
 EpcUeNas::SetImsi (uint64_t imsi)
 {
   m_imsi = imsi;
@@ -107,19 +107,19 @@ EpcUeNas::SetAsSapProvider (LteAsSapProvider* s)
   m_asSapProvider = s;
 }
 
-LteAsSapUser* 
+LteAsSapUser*
 EpcUeNas::GetAsSapUser ()
 {
   return m_asSapUser;
 }
 
-void 
+void
 EpcUeNas::SetForwardUpCallback (Callback <void, Ptr<Packet> > cb)
 {
   m_forwardUpCallback = cb;
 }
 
-void 
+void
 EpcUeNas::Connect (uint16_t cellId, uint16_t earfcn)
 {
   NS_LOG_FUNCTION (this);
@@ -133,7 +133,7 @@ EpcUeNas::Connect (uint16_t cellId, uint16_t earfcn)
 }
 
 
-void 
+void
 EpcUeNas::Disconnect ()
 {
   NS_LOG_FUNCTION (this);
@@ -142,15 +142,15 @@ EpcUeNas::Disconnect ()
 }
 
 
-void 
+void
 EpcUeNas::ActivateEpsBearer (EpsBearer bearer, Ptr<EpcTft> tft)
 {
   NS_LOG_FUNCTION (this);
   switch (m_state)
     {
-    case ACTIVE:
+    /*case ACTIVE:
       NS_FATAL_ERROR ("the necessary NAS signaling to activate a bearer after the initial context has already been setup is not implemented");
-      break;
+      break;*/
 
     default:
       BearerToBeActivated btba;
@@ -165,7 +165,7 @@ bool
 EpcUeNas::Send (Ptr<Packet> packet)
 {
   NS_LOG_FUNCTION (this << packet);
-  
+
   switch (m_state)
     {
     case ACTIVE:
@@ -179,20 +179,20 @@ EpcUeNas::Send (Ptr<Packet> packet)
           }
         else
           {
-            m_asSapProvider->SendData (packet, bid); 
+            m_asSapProvider->SendData (packet, bid);
             return true;
         }
       }
       break;
 
-    default:      
+    default:
       NS_LOG_WARN (this << " NAS OFF, discarding packet");
       return false;
       break;
-    }        
+    }
 }
 
-void 
+void
 EpcUeNas::DoNotifyConnectionSuccessful ()
 {
   NS_LOG_FUNCTION (this);
@@ -200,7 +200,7 @@ EpcUeNas::DoNotifyConnectionSuccessful ()
   SwitchToState (ACTIVE); // will eventually activate dedicated bearers
 }
 
-void 
+void
 EpcUeNas::DoNotifyConnectionFailed ()
 {
   NS_FATAL_ERROR ("connection failed, it should not happen with the current model");
@@ -213,14 +213,14 @@ EpcUeNas::DoRecvData (Ptr<Packet> packet)
   m_forwardUpCallback (packet);
 }
 
-void 
+void
 EpcUeNas::DoNotifyConnectionReleased ()
 {
   NS_LOG_FUNCTION (this);
   SwitchToState (OFF);
 }
 
-void 
+void
 EpcUeNas::DoActivateEpsBearer (EpsBearer bearer, Ptr<EpcTft> tft)
 {
   NS_LOG_FUNCTION (this);
@@ -229,7 +229,7 @@ EpcUeNas::DoActivateEpsBearer (EpsBearer bearer, Ptr<EpcTft> tft)
   m_tftClassifier.Add (tft, bid);
 }
 
-void 
+void
 EpcUeNas::SwitchToState (State newState)
 {
   NS_LOG_FUNCTION (this << newState);

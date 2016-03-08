@@ -49,11 +49,11 @@ namespace ns3 {
 // = TTI - 1 symbol for SRS - 1ns as margin to avoid overlapping simulator events
 // (symbol duration in nanoseconds = TTI / 14 (rounded))
 // in other words, duration of data portion of UL subframe = TTI*(13/14) -1ns
-static const Time UL_DATA_DURATION = NanoSeconds (1e6 - 71429 - 1); 
+static const Time UL_DATA_DURATION = NanoSeconds (1e6 - 71429 - 1);
 
-// delay from subframe start to transmission of SRS 
-// = TTI - 1 symbol for SRS 
-static const Time UL_SRS_DELAY_FROM_SUBFRAME_START = NanoSeconds (1e6 - 71429); 
+// delay from subframe start to transmission of SRS
+// = TTI - 1 symbol for SRS
+static const Time UL_SRS_DELAY_FROM_SUBFRAME_START = NanoSeconds (1e6 - 71429);
 
 
 
@@ -117,7 +117,7 @@ LteUePhy::LteUePhy ()
 
 LteUePhy::LteUePhy (Ptr<LteSpectrumPhy> dlPhy, Ptr<LteSpectrumPhy> ulPhy)
   : LtePhy (dlPhy, ulPhy),
-    m_p10CqiPeriocity (MilliSeconds (1)),  // ideal behavior  
+    m_p10CqiPeriocity (MilliSeconds (1)),  // ideal behavior
     m_a30CqiPeriocity (MilliSeconds (1)),  // ideal behavior
     m_uePhySapUser (0),
     m_ueCphySapUser (0),
@@ -128,7 +128,7 @@ LteUePhy::LteUePhy (Ptr<LteSpectrumPhy> dlPhy, Ptr<LteSpectrumPhy> ulPhy)
   m_uePhySapProvider = new UeMemberLteUePhySapProvider (this);
   m_ueCphySapProvider = new MemberLteUeCphySapProvider<LteUePhy> (this);
   m_macChTtiDelay = UL_PUSCH_TTIS_DELAY;
-  
+
   NS_ASSERT_MSG (Simulator::Now ().GetNanoSeconds () == 0,
                  "Cannot create UE devices after simulation started");
   Simulator::ScheduleNow (&LteUePhy::SubframeIndication, this, 1, 1);
@@ -162,7 +162,7 @@ LteUePhy::GetTypeId (void)
     .AddAttribute ("TxPower",
                    "Transmission power in dBm",
                    DoubleValue (10.0),
-                   MakeDoubleAccessor (&LteUePhy::SetTxPower, 
+                   MakeDoubleAccessor (&LteUePhy::SetTxPower,
                                        &LteUePhy::GetTxPower),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("NoiseFigure",
@@ -174,7 +174,7 @@ LteUePhy::GetTypeId (void)
                    " are connected to sources at the standard noise temperature T0.\" "
                    "In this model, we consider T0 = 290K.",
                    DoubleValue (9.0),
-                   MakeDoubleAccessor (&LteUePhy::SetNoiseFigure, 
+                   MakeDoubleAccessor (&LteUePhy::SetNoiseFigure,
                                        &LteUePhy::GetNoiseFigure),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("TxMode1Gain",
@@ -434,7 +434,7 @@ LteUePhy::ReportRsReceivedPower (const SpectrumValue& power)
 {
   NS_LOG_FUNCTION (this << power);
   m_rsReceivedPowerUpdated = true;
-  m_rsReceivedPower = power;  
+  m_rsReceivedPower = power;
 }
 
 
@@ -449,7 +449,7 @@ LteUePhy::CreateDlCqiFeedbackMessage (const SpectrumValue& sinr)
       // abort method, the UE is still not registered
       return (0);
     }
-  
+
   // apply transmission mode gain
   NS_ASSERT (m_transmissionMode < m_txModeGain.size ());
   SpectrumValue newSinr = sinr;
@@ -483,7 +483,7 @@ LteUePhy::CreateDlCqiFeedbackMessage (const SpectrumValue& sinr)
         }
       double avSinr = sum / (double)rbNum;
       NS_LOG_INFO (this << " cellId " << m_cellId << " rnti " << m_rnti << " RSRP " << rsrp << " SINR " << avSinr);
- 
+
       m_reportCurrentCellRsrpSinrTrace (m_cellId, m_rnti, rsrp, avSinr);
       m_rsrpSinrSampleCounter = 0;
     }
@@ -497,7 +497,7 @@ LteUePhy::CreateDlCqiFeedbackMessage (const SpectrumValue& sinr)
   if (Simulator::Now () > m_p10CqiLast + m_p10CqiPeriocity)
     {
       cqi = m_amc->CreateCqiFeedbacks (newSinr, m_dlBandwidth);
-      
+
       int nLayer = TransmissionModesLayers::TxMode2LayerNum (m_transmissionMode);
       int nbSubChannels = cqi.size ();
       double cqiSum = 0.0;
@@ -588,7 +588,7 @@ LteUePhy::DoSendLteControlMessage (Ptr<LteControlMessage> msg)
   SetControlMessages (msg);
 }
 
-void 
+void
 LteUePhy::DoSendRachPreamble (uint32_t raPreambleId, uint32_t raRnti)
 {
   NS_LOG_FUNCTION (this << raPreambleId);
@@ -606,30 +606,30 @@ void
 LteUePhy::ReceiveLteControlMessageList (std::list<Ptr<LteControlMessage> > msgList)
 {
   NS_LOG_FUNCTION (this);
-  
+
   std::list<Ptr<LteControlMessage> >::iterator it;
   for (it = msgList.begin (); it != msgList.end(); it++)
   {
     Ptr<LteControlMessage> msg = (*it);
-  
+
     if (msg->GetMessageType () == LteControlMessage::DL_DCI)
     {
       Ptr<DlDciLteControlMessage> msg2 = DynamicCast<DlDciLteControlMessage> (msg);
-      
+
       DlDciListElement_s dci = msg2->GetDci ();
       if (dci.m_rnti != m_rnti)
         {
           // DCI not for me
           continue;
         }
-      
+
       if (dci.m_resAlloc != 0)
       {
         NS_FATAL_ERROR ("Resource Allocation type not implemented");
       }
-      
+
       std::vector <int> dlRb;
-      
+
       // translate the DCI to Spectrum framework
       uint32_t mask = 0x1;
       for (int i = 0; i < 32; i++)
@@ -644,19 +644,19 @@ LteUePhy::ReceiveLteControlMessageList (std::list<Ptr<LteControlMessage> > msgLi
         }
         mask = (mask << 1);
       }
-      
+
       // send TB info to LteSpectrumPhy
       NS_LOG_DEBUG (this << " UE " << m_rnti << " DL-DCI " << dci.m_rnti << " bitmap "  << dci.m_rbBitmap);
       for (uint8_t i = 0; i < dci.m_tbsSize.size (); i++)
       {
         m_downlinkSpectrumPhy->AddExpectedTb (dci.m_rnti, dci.m_ndi.at (i), dci.m_tbsSize.at (i), dci.m_mcs.at (i), dlRb, i, dci.m_harqProcess, dci.m_rv.at (i), true /* DL */);
       }
-      
+
       SetSubChannelsForReception (dlRb);
-      
-      
+
+
     }
-    else if (msg->GetMessageType () == LteControlMessage::UL_DCI) 
+    else if (msg->GetMessageType () == LteControlMessage::UL_DCI)
     {
       // set the uplink bandwidht according to the UL-CQI
       Ptr<UlDciLteControlMessage> msg2 = DynamicCast<UlDciLteControlMessage> (msg);
@@ -723,7 +723,7 @@ LteUePhy::ReceiveLteControlMessageList (std::list<Ptr<LteControlMessage> > msgLi
               }
           }
       }
-    else if (msg->GetMessageType () == LteControlMessage::MIB) 
+    else if (msg->GetMessageType () == LteControlMessage::MIB)
       {
         NS_LOG_INFO ("received MIB");
         Ptr<MibLteControlMessage> msg2 = DynamicCast<MibLteControlMessage> (msg);
@@ -734,10 +734,10 @@ LteUePhy::ReceiveLteControlMessageList (std::list<Ptr<LteControlMessage> > msgLi
       // pass the message to UE-MAC
       m_uePhySapUser->ReceiveLteControlMessage (msg);
     }
-    
+
   }
-  
-  
+
+
 }
 
 
@@ -754,22 +754,22 @@ LteUePhy::SubframeIndication (uint32_t frameNo, uint32_t subframeNo)
   NS_LOG_FUNCTION (this << frameNo << subframeNo);
 
   NS_ASSERT_MSG (frameNo > 0, "the SRS index check code assumes that frameNo starts at 1");
-  
+
   // refresh internal variables
   m_rsReceivedPowerUpdated = false;
-  
+
   if (m_ulConfigured)
     {
       // update uplink transmission mask according to previous UL-CQIs
       SetSubChannelsForTransmission (m_subChannelsForTransmissionQueue.at (0));
-   
+
       // shift the queue
       for (uint8_t i = 1; i < m_macChTtiDelay; i++)
         {
           m_subChannelsForTransmissionQueue.at (i-1) = m_subChannelsForTransmissionQueue.at (i);
         }
       m_subChannelsForTransmissionQueue.at (m_macChTtiDelay-1).clear ();
-  
+
       if (m_srsConfigured && (m_srsStartTime <= Simulator::Now ()))
         {
 
@@ -777,12 +777,12 @@ LteUePhy::SubframeIndication (uint32_t frameNo, uint32_t subframeNo)
           if ((((frameNo-1)*10 + (subframeNo-1)) % m_srsPeriodicity) == m_srsSubframeOffset)
             {
               NS_LOG_INFO ("frame " << frameNo << " subframe " << subframeNo << " sending SRS (offset=" << m_srsSubframeOffset << ", period=" << m_srsPeriodicity << ")");
-              m_sendSrsEvent = Simulator::Schedule (UL_SRS_DELAY_FROM_SUBFRAME_START, 
+              m_sendSrsEvent = Simulator::Schedule (UL_SRS_DELAY_FROM_SUBFRAME_START,
                                                     &LteUePhy::SendSrs,
                                                     this);
             }
         }
-      
+
       std::list<Ptr<LteControlMessage> > ctrlMsg = GetControlMessages ();
       // send packets in queue
       NS_LOG_LOGIC (this << " UE - start slot for PUSCH + PUCCH - RNTI " << m_rnti << " CELLID " << m_cellId);
@@ -808,22 +808,22 @@ LteUePhy::SubframeIndication (uint32_t frameNo, uint32_t subframeNo)
             }
         }
     }  // m_configured
-  
+
   // trigger the MAC
   m_uePhySapUser->SubframeIndication (frameNo, subframeNo);
-  
-  
+
+
   ++subframeNo;
   if (subframeNo > 10)
     {
       ++frameNo;
       subframeNo = 1;
     }
-  
+
   // schedule next subframe indication
-  Simulator::Schedule (Seconds (GetTti ()), &LteUePhy::SubframeIndication, this, frameNo, subframeNo);  
+  Simulator::Schedule (Seconds (GetTti ()), &LteUePhy::SubframeIndication, this, frameNo, subframeNo);
 }
-  
+
 void
 LteUePhy::SendSrs ()
 {
@@ -844,7 +844,7 @@ void
 LteUePhy::DoReset ()
 {
   NS_LOG_FUNCTION (this);
-  
+
   m_rnti = 0;
   m_transmissionMode = 0;
   m_srsPeriodicity = 0;
@@ -888,8 +888,8 @@ LteUePhy::DoSyncronizeWithEnb (uint16_t cellId, uint16_t dlEarfcn)
   m_dlBandwidth = 6;
   Ptr<SpectrumValue> noisePsd = LteSpectrumValueHelper::CreateNoisePowerSpectralDensity (m_dlEarfcn, m_dlBandwidth, m_noiseFigure);
   m_downlinkSpectrumPhy->SetNoisePowerSpectralDensity (noisePsd);
-  m_downlinkSpectrumPhy->GetChannel ()->AddRx (m_downlinkSpectrumPhy);  
-  
+  m_downlinkSpectrumPhy->GetChannel ()->AddRx (m_downlinkSpectrumPhy);
+
   m_dlConfigured = false;
   m_ulConfigured = false;
 }
@@ -916,16 +916,16 @@ LteUePhy::DoSetDlBandwidth (uint8_t dlBandwidth)
               break;
             }
         }
-  
+
       Ptr<SpectrumValue> noisePsd = LteSpectrumValueHelper::CreateNoisePowerSpectralDensity (m_dlEarfcn, m_dlBandwidth, m_noiseFigure);
       m_downlinkSpectrumPhy->SetNoisePowerSpectralDensity (noisePsd);
-      m_downlinkSpectrumPhy->GetChannel ()->AddRx (m_downlinkSpectrumPhy);  
+      m_downlinkSpectrumPhy->GetChannel ()->AddRx (m_downlinkSpectrumPhy);
     }
   m_dlConfigured = true;
 }
 
 
-void 
+void
 LteUePhy::DoConfigureUplink (uint16_t ulEarfcn, uint8_t ulBandwidth)
 {
   m_ulEarfcn = ulEarfcn;
@@ -933,14 +933,14 @@ LteUePhy::DoConfigureUplink (uint16_t ulEarfcn, uint8_t ulBandwidth)
   m_ulConfigured = true;
 }
 
- 
+
 void
 LteUePhy::DoSetRnti (uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << rnti);
   m_rnti = rnti;
 }
- 
+
 void
 LteUePhy::DoSetTransmissionMode (uint8_t txMode)
 {
@@ -964,43 +964,43 @@ LteUePhy::DoSetSrsConfigurationIndex (uint16_t srcCi)
 }
 
 
-void 
+void
 LteUePhy::SetTxMode1Gain (double gain)
 {
   SetTxModeGain (1, gain);
 }
 
-void 
+void
 LteUePhy::SetTxMode2Gain (double gain)
 {
   SetTxModeGain (2, gain);
 }
 
-void 
+void
 LteUePhy::SetTxMode3Gain (double gain)
 {
   SetTxModeGain (3, gain);
 }
 
-void 
+void
 LteUePhy::SetTxMode4Gain (double gain)
 {
   SetTxModeGain (4, gain);
 }
 
-void 
+void
 LteUePhy::SetTxMode5Gain (double gain)
 {
   SetTxModeGain (5, gain);
 }
 
-void 
+void
 LteUePhy::SetTxMode6Gain (double gain)
 {
   SetTxModeGain (6, gain);
 }
 
-void 
+void
 LteUePhy::SetTxMode7Gain (double gain)
 {
   SetTxModeGain (7, gain);

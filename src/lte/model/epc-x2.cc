@@ -45,7 +45,7 @@ X2IfaceInfo::~X2IfaceInfo (void)
   m_localUserPlaneSocket = 0;
 }
 
-X2IfaceInfo& 
+X2IfaceInfo&
 X2IfaceInfo::operator= (const X2IfaceInfo& value)
 {
   NS_LOG_FUNCTION (this);
@@ -69,7 +69,7 @@ X2CellInfo::~X2CellInfo (void)
   m_remoteCellId = 0;
 }
 
-X2CellInfo& 
+X2CellInfo&
 X2CellInfo::operator= (const X2CellInfo& value)
 {
   NS_LOG_FUNCTION (this);
@@ -83,8 +83,8 @@ X2CellInfo::operator= (const X2CellInfo& value)
 NS_OBJECT_ENSURE_REGISTERED (EpcX2);
 
 EpcX2::EpcX2 ()
-  : m_x2cUdpPort (4444),
-    m_x2uUdpPort (2152)
+  : m_x2cUdpPort (4443),
+    m_x2uUdpPort (6665)
 {
   NS_LOG_FUNCTION (this);
 
@@ -136,6 +136,9 @@ EpcX2::AddX2Interface (uint16_t localCellId, Ipv4Address localX2Address, uint16_
 
   int retval;
 
+  m_x2cUdpPort++;
+  m_x2uUdpPort++;
+
   // Get local eNB where this X2 entity belongs to
   Ptr<Node> localEnb = GetObject<Node> ();
 
@@ -166,7 +169,7 @@ EpcX2::AddX2Interface (uint16_t localCellId, Ipv4Address localX2Address, uint16_
 }
 
 
-void 
+void
 EpcX2::RecvFromX2cSocket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
@@ -228,7 +231,7 @@ EpcX2::RecvFromX2cSocket (Ptr<Socket> socket)
 
           NS_LOG_INFO ("X2 HandoverRequestAck header: " << x2HoReqAckHeader);
 
-          EpcX2SapUser::HandoverRequestAckParams params;          
+          EpcX2SapUser::HandoverRequestAckParams params;
           params.oldEnbUeX2apId = x2HoReqAckHeader.GetOldEnbUeX2apId ();
           params.newEnbUeX2apId = x2HoReqAckHeader.GetNewEnbUeX2apId ();
           params.sourceCellId   = cellsInfo->m_localCellId;
@@ -253,7 +256,7 @@ EpcX2::RecvFromX2cSocket (Ptr<Socket> socket)
 
           NS_LOG_INFO ("X2 HandoverPreparationFailure header: " << x2HoPrepFailHeader);
 
-          EpcX2SapUser::HandoverPreparationFailureParams params;          
+          EpcX2SapUser::HandoverPreparationFailureParams params;
           params.oldEnbUeX2apId = x2HoPrepFailHeader.GetOldEnbUeX2apId ();
           params.sourceCellId   = cellsInfo->m_localCellId;
           params.targetCellId   = cellsInfo->m_remoteCellId;
@@ -366,7 +369,7 @@ EpcX2::RecvFromX2cSocket (Ptr<Socket> socket)
 }
 
 
-void 
+void
 EpcX2::RecvFromX2uSocket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
@@ -739,8 +742,8 @@ EpcX2::DoSendUeData (EpcX2SapProvider::UeDataParams params)
   NS_LOG_LOGIC ("targetCellId = " << params.targetCellId);
   NS_LOG_LOGIC ("gtpTeid = " << params.gtpTeid);
 
-  NS_ASSERT_MSG (m_x2InterfaceSockets.find (params.targetCellId) != m_x2InterfaceSockets.end (),
-                 "Missing infos for targetCellId = " << params.targetCellId);
+  if(m_x2InterfaceSockets.find (params.targetCellId) == m_x2InterfaceSockets.end ()) return;
+
   Ptr<X2IfaceInfo> socketInfo = m_x2InterfaceSockets [params.targetCellId];
   Ptr<Socket> sourceSocket = socketInfo->m_localUserPlaneSocket;
   Ipv4Address targetIpAddr = socketInfo->m_remoteIpAddr;

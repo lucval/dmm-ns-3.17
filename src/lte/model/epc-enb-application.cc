@@ -19,7 +19,6 @@
  *         Nicola Baldo <nbaldo@cttc.cat>
  */
 
-
 #include "epc-enb-application.h"
 #include "ns3/log.h"
 #include "ns3/mac48-address.h"
@@ -43,6 +42,10 @@ EpcEnbApplication::EpsFlowId_t::EpsFlowId_t ()
 EpcEnbApplication::EpsFlowId_t::EpsFlowId_t (const uint16_t a, const uint8_t b)
   : m_rnti (a),
     m_bid (b)
+{
+}
+
+EpcEnbApplication::Buff_t::Buff_t ()
 {
 }
 
@@ -80,7 +83,7 @@ EpcEnbApplication::DoDispose (void)
 
 EpcEnbApplication::EpcEnbApplication (Ptr<Socket> lteSocket, Ptr<Socket> s1uSocket, Ipv4Address enbS1uAddress, Ipv4Address sgwS1uAddress, uint16_t cellId)
   : m_lteSocket (lteSocket),
-    m_s1uSocket (s1uSocket),    
+    m_s1uSocket (s1uSocket),
     m_enbS1uAddress (enbS1uAddress),
     m_sgwS1uAddress (sgwS1uAddress),
     m_gtpuUdpPort (2152), // fixed by the standard
@@ -102,33 +105,33 @@ EpcEnbApplication::~EpcEnbApplication (void)
 }
 
 
-void 
+void
 EpcEnbApplication::SetS1SapUser (EpcEnbS1SapUser * s)
 {
   m_s1SapUser = s;
 }
 
-  
-EpcEnbS1SapProvider* 
+
+EpcEnbS1SapProvider*
 EpcEnbApplication::GetS1SapProvider ()
 {
   return m_s1SapProvider;
 }
 
-void 
+void
 EpcEnbApplication::SetS1apSapMme (EpcS1apSapMme * s)
 {
   m_s1apSapMme = s;
 }
 
-  
-EpcS1apSapEnb* 
+
+EpcS1apSapEnb*
 EpcEnbApplication::GetS1apSapEnb ()
 {
   return m_s1apSapEnb;
 }
 
-void 
+void
 EpcEnbApplication::DoInitialUeMessage (uint64_t imsi, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this);
@@ -137,11 +140,11 @@ EpcEnbApplication::DoInitialUeMessage (uint64_t imsi, uint16_t rnti)
   m_s1apSapMme->InitialUeMessage (imsi, rnti, imsi, m_cellId);
 }
 
-void 
+void
 EpcEnbApplication::DoPathSwitchRequest (EpcEnbS1SapProvider::PathSwitchRequestParameters params)
 {
   NS_LOG_FUNCTION (this);
-  uint16_t enbUeS1Id = params.rnti;  
+  uint16_t enbUeS1Id = params.rnti;
   uint64_t mmeUeS1Id = params.mmeUeS1Id;
   uint64_t imsi = mmeUeS1Id;
   // side effect: create entry if not exist
@@ -156,8 +159,9 @@ EpcEnbApplication::DoPathSwitchRequest (EpcEnbS1SapProvider::PathSwitchRequestPa
       EpsFlowId_t flowId;
       flowId.m_rnti = params.rnti;
       flowId.m_bid = bit->epsBearerId;
-      uint32_t teid = bit->teid;
-      
+      //uint32_t teid = bit->teid;
+      uint32_t teid = params.rnti; // trick for s1-handover
+
       EpsFlowId_t rbid (params.rnti, bit->epsBearerId);
       // side effect: create entries if not exist
       m_rbidTeidMap[params.rnti][bit->epsBearerId] = teid;
@@ -173,7 +177,7 @@ EpcEnbApplication::DoPathSwitchRequest (EpcEnbS1SapProvider::PathSwitchRequestPa
   m_s1apSapMme->PathSwitchRequest (enbUeS1Id, mmeUeS1Id, gci, erabToBeSwitchedInDownlinkList);
 }
 
-void 
+void
 EpcEnbApplication::DoUeContextRelease (uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << rnti);
@@ -191,11 +195,11 @@ EpcEnbApplication::DoUeContextRelease (uint16_t rnti)
     }
 }
 
-void 
+void
 EpcEnbApplication::DoInitialContextSetupRequest (uint64_t mmeUeS1Id, uint16_t enbUeS1Id, std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList)
 {
   NS_LOG_FUNCTION (this);
-  
+
   for (std::list<EpcS1apSapEnb::ErabToBeSetupItem>::iterator erabIt = erabToBeSetupList.begin ();
        erabIt != erabToBeSetupList.end ();
        ++erabIt)
@@ -206,7 +210,7 @@ EpcEnbApplication::DoInitialContextSetupRequest (uint64_t mmeUeS1Id, uint16_t en
       std::map<uint64_t, uint16_t>::iterator imsiIt = m_imsiRntiMap.find (imsi);
       NS_ASSERT_MSG (imsiIt != m_imsiRntiMap.end (), "unknown IMSI");
       uint16_t rnti = imsiIt->second;
-      
+
       struct EpcEnbS1SapUser::DataRadioBearerSetupRequestParameters params;
       params.rnti = rnti;
       params.bearer = erabIt->erabLevelQosParameters;
@@ -222,7 +226,7 @@ EpcEnbApplication::DoInitialContextSetupRequest (uint64_t mmeUeS1Id, uint16_t en
     }
 }
 
-void 
+void
 EpcEnbApplication::DoPathSwitchRequestAcknowledge (uint64_t enbUeS1Id, uint64_t mmeUeS1Id, uint16_t gci, std::list<EpcS1apSapEnb::ErabSwitchedInUplinkItem> erabToBeSwitchedInUplinkList)
 {
   NS_LOG_FUNCTION (this);
@@ -236,10 +240,10 @@ EpcEnbApplication::DoPathSwitchRequestAcknowledge (uint64_t enbUeS1Id, uint64_t 
   m_s1SapUser->PathSwitchRequestAcknowledge (params);
 }
 
-void 
+void
 EpcEnbApplication::RecvFromLteSocket (Ptr<Socket> socket)
 {
-  NS_LOG_FUNCTION (this);  
+  NS_LOG_FUNCTION (this);
   NS_ASSERT (socket == m_lteSocket);
   Ptr<Packet> packet = socket->Recv ();
 
@@ -254,6 +258,23 @@ EpcEnbApplication::RecvFromLteSocket (Ptr<Socket> socket)
   uint8_t bid = tag.GetBid ();
   NS_LOG_LOGIC ("received packet with RNTI=" << (uint32_t) rnti << ", BID=" << (uint32_t)  bid);
   std::map<uint16_t, std::map<uint8_t, uint32_t> >::iterator rntiIt = m_rbidTeidMap.find (rnti);
+
+  Ipv4Header header;
+  packet->PeekHeader(header);
+  Ipv4Address prefix = header.GetDestination();
+  uint8_t buf[4];
+  prefix.Serialize(buf);
+  if(buf[0] == 3)
+    return; // drop the packets (uncomment below if you want to send it back to the UE)
+  /*{
+   packet->RemoveHeader(header);
+   Ipv4Header newHeader;
+   newHeader.SetSource(header.GetDestination());
+   newHeader.SetDestination(header.GetSource());
+   packet->AddHeader(newHeader);
+   return SendToLteSocket (packet, rnti, bid);
+  }*/
+
   if (rntiIt == m_rbidTeidMap.end ())
     {
       NS_LOG_WARN ("UE context not found, discarding packet");
@@ -267,29 +288,53 @@ EpcEnbApplication::RecvFromLteSocket (Ptr<Socket> socket)
     }
 }
 
-void 
+void
 EpcEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
 {
-  NS_LOG_FUNCTION (this << socket);  
+  NS_LOG_FUNCTION (this << socket);
   NS_ASSERT (socket == m_s1uSocket);
   Ptr<Packet> packet = socket->Recv ();
   GtpuHeader gtpu;
   packet->RemoveHeader (gtpu);
   uint32_t teid = gtpu.GetTeid ();
   std::map<uint32_t, EpsFlowId_t>::iterator it = m_teidRbidMap.find (teid);
-  NS_ASSERT (it != m_teidRbidMap.end ());
+  //if (it == m_teidRbidMap.end ()) return;
 
   // workaround for bug 231 https://www.nsnam.org/bugzilla/show_bug.cgi?id=231
   SocketAddressTag tag;
   packet->RemovePacketTag (tag);
-  
+
+  Ptr<Packet> p = packet->Copy();
+  Ipv4Header head;
+  p->RemoveHeader(head);
+
+  if (it == m_teidRbidMap.end ()){
+	m_store[head.GetDestination()].push_back(packet);
+        return;
+  }
+
+  Buff_t packetBuffer;
+  if(m_vbuff[it->second.m_rnti].m_packet.size()>0)
+  	packetBuffer = m_vbuff[it->second.m_rnti];
+  packetBuffer.m_packet.push_back(packet->Copy ());
+  packetBuffer.m_bid = it->second.m_bid;
+  packetBuffer.m_addTime.push_back(Simulator::Now().GetSeconds());
+  m_vbuff[it->second.m_rnti] = packetBuffer;
+
+  for(uint16_t i=0; i<m_store[head.GetDestination()].size(); i++){
+	if(m_store[head.GetDestination()].at(i) != 0){
+		SendToLteSocket(m_store[head.GetDestination()].at(i), it->second.m_rnti, it->second.m_bid);
+		m_store[head.GetDestination()].at(i) = 0;
+	}
+  }
+
   SendToLteSocket (packet, it->second.m_rnti, it->second.m_bid);
 }
 
-void 
+void
 EpcEnbApplication::SendToLteSocket (Ptr<Packet> packet, uint16_t rnti, uint8_t bid)
 {
-  NS_LOG_FUNCTION (this << packet << rnti << (uint16_t) bid << packet->GetSize ());  
+  NS_LOG_FUNCTION (this << packet << rnti << (uint16_t) bid << packet->GetSize ());
   EpsBearerTag tag (rnti, bid);
   packet->AddPacketTag (tag);
   int sentBytes = m_lteSocket->Send (packet);
@@ -297,15 +342,15 @@ EpcEnbApplication::SendToLteSocket (Ptr<Packet> packet, uint16_t rnti, uint8_t b
 }
 
 
-void 
+void
 EpcEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
 {
-  NS_LOG_FUNCTION (this << packet << teid <<  packet->GetSize ());  
+  NS_LOG_FUNCTION (this << packet << teid <<  packet->GetSize ());
   GtpuHeader gtpu;
   gtpu.SetTeid (teid);
   // From 3GPP TS 29.281 v10.0.0 Section 5.1
   // Length of the payload + the non obligatory GTP-U header
-  gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);  
+  gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);
   packet->AddHeader (gtpu);
   uint32_t flags = 0;
   m_s1uSocket->SendTo (packet, flags, InetSocketAddress(m_sgwS1uAddress, m_gtpuUdpPort));

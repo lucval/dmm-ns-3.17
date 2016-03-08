@@ -16,9 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: 
+ * Authors:
  *   Nicola Baldo <nbaldo@cttc.es> (the EpcTftClassifier class)
- *   Giuseppe Piro <g.piro@poliba.it> (part of the code in EpcTftClassifier::Classify () 
+ *   Giuseppe Piro <g.piro@poliba.it> (part of the code in EpcTftClassifier::Classify ()
  *       which comes from RrcEntity::Classify of the GSoC 2010 LTE module)
  *
  */
@@ -49,9 +49,9 @@ void
 EpcTftClassifier::Add (Ptr<EpcTft> tft, uint32_t id)
 {
   NS_LOG_FUNCTION (this << tft);
-  
-  m_tftMap[id] = tft;  
-  
+
+  m_tftMap[id] = tft;
+
   // simple sanity check: there shouldn't be more than 16 bearers (hence TFTs) per UE
   NS_ASSERT (m_tftMap.size () <= 16);
 }
@@ -63,8 +63,8 @@ EpcTftClassifier::Delete (uint32_t id)
   m_tftMap.erase (id);
 }
 
- 
-uint32_t 
+
+uint32_t
 EpcTftClassifier::Classify (Ptr<Packet> p, EpcTft::Direction direction)
 {
   NS_LOG_FUNCTION (this << p << direction);
@@ -77,19 +77,19 @@ EpcTftClassifier::Classify (Ptr<Packet> p, EpcTft::Direction direction)
   Ipv4Address localAddress;
   Ipv4Address remoteAddress;
 
-  
+
   if (direction ==  EpcTft::UPLINK)
     {
       localAddress = ipv4Header.GetSource ();
       remoteAddress = ipv4Header.GetDestination ();
     }
   else
-    { 
+    {
       NS_ASSERT (direction ==  EpcTft::DOWNLINK);
       remoteAddress = ipv4Header.GetSource ();
-      localAddress = ipv4Header.GetDestination ();      
+      localAddress = ipv4Header.GetDestination ();
     }
-  
+
   uint8_t protocol = ipv4Header.GetProtocol ();
 
   uint8_t tos = ipv4Header.GetTos ();
@@ -135,10 +135,10 @@ EpcTftClassifier::Classify (Ptr<Packet> p, EpcTft::Direction direction)
     }
 
   NS_LOG_INFO ("Classifing packet:"
-	       << " localAddr="  << localAddress 
-	       << " remoteAddr=" << remoteAddress 
-	       << " localPort="  << localPort 
-	       << " remotePort=" << remotePort 
+	       << " localAddr="  << localAddress
+	       << " remoteAddr=" << remoteAddress
+	       << " localPort="  << localPort
+	       << " remotePort=" << remotePort
 	       << " tos=0x" << (uint16_t) tos );
 
   // now it is possible to classify the packet!
@@ -151,7 +151,7 @@ EpcTftClassifier::Classify (Ptr<Packet> p, EpcTft::Direction direction)
     {
       NS_LOG_LOGIC ("TFT id: " << it->first );
       NS_LOG_LOGIC (" Ptr<EpcTft>: " << it->second);
-      Ptr<EpcTft> tft = it->second;         
+      Ptr<EpcTft> tft = it->second;
       if (tft->Matches (direction, remoteAddress, localAddress, remotePort, localPort, tos))
         {
 	  NS_LOG_LOGIC ("matches with TFT ID = " << it->first);

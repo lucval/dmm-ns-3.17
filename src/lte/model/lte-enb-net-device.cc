@@ -77,14 +77,14 @@ TypeId LteEnbNetDevice::GetTypeId (void)
                    MakePointerChecker <LteEnbPhy> ())
     .AddAttribute ("UlBandwidth",
                    "Uplink Transmission Bandwidth Configuration in number of Resource Blocks",
-                   UintegerValue (25),
-                   MakeUintegerAccessor (&LteEnbNetDevice::SetUlBandwidth, 
+                   UintegerValue (100),
+                   MakeUintegerAccessor (&LteEnbNetDevice::SetUlBandwidth,
                                          &LteEnbNetDevice::GetUlBandwidth),
                    MakeUintegerChecker<uint8_t> ())
     .AddAttribute ("DlBandwidth",
                    "Downlink Transmission Bandwidth Configuration in number of Resource Blocks",
-                   UintegerValue (25),
-                   MakeUintegerAccessor (&LteEnbNetDevice::SetDlBandwidth, 
+                   UintegerValue (100),
+                   MakeUintegerAccessor (&LteEnbNetDevice::SetDlBandwidth,
                                          &LteEnbNetDevice::GetDlBandwidth),
                    MakeUintegerChecker<uint8_t> ())
     .AddAttribute ("CellId",
@@ -168,17 +168,17 @@ LteEnbNetDevice::GetCellId () const
   return m_cellId;
 }
 
-uint8_t 
+uint8_t
 LteEnbNetDevice::GetUlBandwidth () const
 {
   return m_ulBandwidth;
 }
 
-void 
+void
 LteEnbNetDevice::SetUlBandwidth (uint8_t bw)
-{ 
+{
   switch (bw)
-    { 
+    {
     case 6:
     case 15:
     case 25:
@@ -194,17 +194,17 @@ LteEnbNetDevice::SetUlBandwidth (uint8_t bw)
     }
 }
 
-uint8_t 
+uint8_t
 LteEnbNetDevice::GetDlBandwidth () const
 {
   return m_dlBandwidth;
 }
 
-void 
+void
 LteEnbNetDevice::SetDlBandwidth (uint8_t bw)
 {
   switch (bw)
-    { 
+    {
     case 6:
     case 15:
     case 25:
@@ -220,35 +220,34 @@ LteEnbNetDevice::SetDlBandwidth (uint8_t bw)
     }
 }
 
-uint16_t 
+uint16_t
 LteEnbNetDevice::GetDlEarfcn () const
 {
   return m_dlEarfcn;
 }
 
-void 
+void
 LteEnbNetDevice::SetDlEarfcn (uint16_t earfcn)
-{ 
+{
   m_dlEarfcn = earfcn;
 }
 
-uint16_t 
+uint16_t
 LteEnbNetDevice::GetUlEarfcn () const
 {
   return m_ulEarfcn;
 }
 
-void 
+void
 LteEnbNetDevice::SetUlEarfcn (uint16_t earfcn)
-{ 
+{
   m_ulEarfcn = earfcn;
 }
 
 
-void 
+void
 LteEnbNetDevice::DoInitialize (void)
 {
-
   UpdateConfig ();
   m_phy->Initialize ();
   m_mac->Initialize ();

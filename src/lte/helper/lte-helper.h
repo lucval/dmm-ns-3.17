@@ -36,7 +36,13 @@
 #include <ns3/radio-bearer-stats-calculator.h>
 #include <ns3/radio-bearer-stats-connector.h>
 #include <ns3/epc-tft.h>
+#include <ns3/lte-enb-rrc.h>
 #include <ns3/mobility-model.h>
+#include <ns3/arp-cache.h>
+#include <ns3/ipv4-interface.h>
+
+#define MAKE_PATH_SIZE 9+20+20
+#define OFP_MODIFY_STATE_SIZE 56+20+20
 
 namespace ns3 {
 
@@ -62,9 +68,9 @@ public:
   virtual void DoDispose (void);
 
 
-  /** 
+  /**
    * Set the EpcHelper to be used to setup the EPC network in
-   * conjunction with the setup of the LTE radio access network 
+   * conjunction with the setup of the LTE radio access network
    *
    * \note if no EpcHelper is ever set, then LteHelper will default
    * to creating an LTE-only simulation with no EPC, using LteRlcSm as
@@ -72,35 +78,35 @@ public:
    * words, it will be a radio-level simulation involving only LTE PHY
    * and MAC and the FF Scheduler, with a saturation traffic model for
    * the RLC.
-   * 
+   *
    * \param h a pointer to the EpcHelper to be used
    */
   void SetEpcHelper (Ptr<EpcHelper> h);
 
-  /** 
-   * 
-   * 
+  /**
+   *
+   *
    * \param type the type of pathloss model to be used for the eNBs
    */
   void SetPathlossModelType (std::string type);
 
   /**
    * set an attribute for the pathloss model to be created
-   * 
+   *
    * \param n the name of the attribute
    * \param v the value of the attribute
    */
   void SetPathlossModelAttribute (std::string n, const AttributeValue &v);
 
-  /** 
-   * 
+  /**
+   *
    * \param type the type of scheduler to be used for the eNBs
    */
   void SetSchedulerType (std::string type);
 
   /**
    * set an attribute for the scheduler to be created
-   * 
+   *
    * \param n the name of the attribute
    * \param v the value of the attribute
    */
@@ -108,49 +114,49 @@ public:
 
   /**
    * set an attribute for the LteEnbNetDevice to be created
-   * 
+   *
    * \param n the name of the attribute
    * \param v the value of the attribute
    */
   void SetEnbDeviceAttribute (std::string n, const AttributeValue &v);
 
-  /** 
-   * 
+  /**
+   *
    * \param type the type of AntennaModel to be used for the eNBs
    */
   void SetEnbAntennaModelType (std::string type);
 
   /**
    * set an attribute for the AntennaModel to be used for the eNBs
-   * 
+   *
    * \param n the name of the attribute
    * \param v the value of the attribute
    */
   void SetEnbAntennaModelAttribute (std::string n, const AttributeValue &v);
 
-  /** 
-   * 
+  /**
+   *
    * \param type the type of AntennaModel to be used for the UEs
    */
   void SetUeAntennaModelType (std::string type);
 
   /**
    * set an attribute for the AntennaModel to be used for the UEs
-   * 
+   *
    * \param n the name of the attribute
    * \param v the value of the attribute
    */
   void SetUeAntennaModelAttribute (std::string n, const AttributeValue &v);
 
-  /** 
-   * 
+  /**
+   *
    * \param type the type of SpectrumChannel to be used for the UEs
    */
   void SetSpectrumChannelType (std::string type);
 
   /**
    * set an attribute for the SpectrumChannel to be used for the UEs
-   * 
+   *
    * \param n the name of the attribute
    * \param v the value of the attribute
    */
@@ -191,21 +197,21 @@ public:
    */
   void Attach (Ptr<NetDevice> ueDevice, Ptr<NetDevice> enbDevice);
 
-  /** 
+  /**
    * Attach each UE in a set to the closest (w.r.t. distance) eNB among those in a set.
-   * 
-   * 
-   * 
+   *
+   *
+   *
    * \param ueDevices the set of UEs
    * \param enbDevices the set of eNBs
    */
   void AttachToClosestEnb (NetDeviceContainer ueDevices, NetDeviceContainer enbDevices);
 
-  /** 
+  /**
    * Attach an UE ito the closest (w.r.t. distance) eNB among those in a set
    * Will call LteHelper::Attach () passing to it the single eNB
-   * instance which resulted to be the closest to the UE 
-   * 
+   * instance which resulted to be the closest to the UE
+   *
    * \param ueDevice the UE
    * \param enbDevices the set of eNBs
    */
@@ -255,30 +261,42 @@ public:
    */
   void HandoverRequest (Time hoTime, Ptr<NetDevice> ueDev, Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev);
 
+  /**
+   * Trigger an S!-based handover of a UE between two P-GWs with or without MME relocation
+   *
+   * \param hoTime when the Handover is initiated
+   * \param ue the UE that hands off
+   * \param ueCopy copy of the original UE in the new EPC
+   */
+  void S1HandoverRequest (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress,
+                          Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
+  void S1HandoverRequestMmeRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress,
+                                       Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
 
-  /** 
+
+  /**
    * Call ActivateDataRadioBearer (ueDevice, bearer) for each UE
    * device in a given set
-   * 
+   *
    * \param ueDevices the set of UE devices
    * \param bearer
    */
   void ActivateDataRadioBearer (NetDeviceContainer ueDevices,  EpsBearer bearer);
 
-  /** 
+  /**
    * Activate a Data Radio Bearer for a simplified LTE-only simulation
    * without EPC. This method will schedule the actual activation of
    * the bearer so that it happens after the UE got connected.
-   * 
+   *
    * \param ueDevice the device of the UE for which the radio bearer
    * is to be activated
    * \param bearer the characteristics of the bearer to be activated
    */
   void ActivateDataRadioBearer (Ptr<NetDevice> ueDevice,  EpsBearer bearer);
 
-  /** 
-   * 
-   * 
+  /**
+   *
+   *
    * \param type the fading model to be used
    */
   void SetFadingModel (std::string model);
@@ -306,8 +324,6 @@ public:
    */
   void EnablePhyTraces (void);
 
-
-
   /**
    * Enable trace sinks for DL PHY layer
    */
@@ -317,7 +333,7 @@ public:
    * Enable trace sinks for UL PHY layer
    */
   void EnableUlPhyTraces (void);
-  
+
   /**
    * Enable trace sinks for DL transmission PHY layer
    */
@@ -358,8 +374,8 @@ public:
    */
   void EnableRlcTraces (void);
 
-  /** 
-   * 
+  /**
+   *
    * \return the RLC stats calculator object
    */
   Ptr<RadioBearerStatsCalculator> GetRlcStats (void);
@@ -369,8 +385,8 @@ public:
    */
   void EnablePdcpTraces (void);
 
-  /** 
-   * 
+  /**
+   *
    * \return the PDCP stats calculator object
    */
   Ptr<RadioBearerStatsCalculator> GetPdcpStats (void);
@@ -386,12 +402,23 @@ public:
   * have been assigned. The Install() method should have previously been
   * called by the user.
   *
-  * \param c NetDeviceContainer of the set of net devices for which the 
+  * \param c NetDeviceContainer of the set of net devices for which the
   *          LteNetDevice should be modified to use a fixed stream
   * \param stream first stream index to use
   * \return the number of stream indices assigned by this helper
   */
   int64_t AssignStreams (NetDeviceContainer c, int64_t stream);
+
+  void CreateController (Ptr<Node> controller);
+  void ConnectSocketsIngress (Ptr<Node> ofNode, Ipv4Address ofNodeAddress);
+  void ConnectSocketsEgress (Ptr<Node> ofNode, Ipv4Address egressAddress, Ipv4Address pgwAddress);
+  void AttachMme (Ptr<Node> mme, Ipv4Address pgwAddress);
+  void ConnectMmes(Ptr<Node> source, Ptr<Node> destination, Ipv4Address tPgwAddress);
+
+  void InitArp(Ptr<ArpCache> arp, NodeContainer n);
+  void UpdateArp(Ipv4Address ipAddr, Mac48Address addr);
+
+  uint32_t GetSignalingBytes(void);
 
 protected:
   // inherited from Object
@@ -402,6 +429,12 @@ private:
   Ptr<NetDevice> InstallSingleUeDevice (Ptr<Node> n);
 
   void DoHandoverRequest (Ptr<NetDevice> ueDev, Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev);
+  void DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
+  void DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddress, Ptr<NetDevice> sourceEnb,
+                                         Ptr<NetDevice> targetEnb);
+
+  void ReceiveFromMme (Ptr<Socket> sock);
+  void ReceiveFromSourceMme (Ptr<Socket> sock);
 
   Ptr<SpectrumChannel> m_downlinkChannel;
   Ptr<SpectrumChannel> m_uplinkChannel;
@@ -436,7 +469,25 @@ private:
   uint64_t m_imsiCounter;
   uint16_t m_cellIdCounter;
 
+  /*mme stuffs*/
+  uint16_t m_mmePort;
+  std::map<Ipv4Address, Ptr<Socket> > m_mmeMap;
+  std::map<Ipv4Address, Ptr<Socket> > m_mmeSourceMap;
+
+  /*controller stuffs*/
+  Ptr<Node> m_controller;
+  std::map<Ipv4Address, Ptr<Socket> > m_controllerSocketMapEg;
+  std::vector <Ptr<Socket> > m_controllerSocketVectorIn;
+  std::map<Ipv4Address, Ptr<Node> > m_egress;
+  std::vector <Ptr<Node> > m_ingress;
+
+  /* arp stuffs */
+  NodeContainer m_arpNodes;
+  Ptr<ArpCache> m_arp;
+
   bool m_useIdealRrc;
+
+  uint32_t m_signalingBytes;
 };
 
 

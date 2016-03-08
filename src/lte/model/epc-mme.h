@@ -42,20 +42,20 @@ class EpcMme : public Object
 
   friend class MemberEpcS1apSapMme<EpcMme>;
   friend class MemberEpcS11SapMme<EpcMme>;
-  
+
 public:
-  
-  /** 
+
+  /**
    * Constructor
    */
   EpcMme ();
 
-  /** 
+  /**
    * Destructor
-   */  
+   */
   virtual ~EpcMme ();
-  
-  // inherited from Object  
+
+  // inherited from Object
   static TypeId GetTypeId (void);
 protected:
   virtual void DoDispose ();
@@ -63,45 +63,47 @@ protected:
 public:
 
 
-  /** 
-   * 
-   * \return the MME side of the S1-AP SAP 
+  /**
+   *
+   * \return the MME side of the S1-AP SAP
    */
   EpcS1apSapMme* GetS1apSapMme ();
 
-  /** 
-   * Set the SGW side of the S11 SAP 
-   * 
-   * \param s the SGW side of the S11 SAP 
+  /**
+   * Set the SGW side of the S11 SAP
+   *
+   * \param s the SGW side of the S11 SAP
    */
   void SetS11SapSgw (EpcS11SapSgw * s);
 
-  /** 
-   * 
-   * \return the MME side of the S11 SAP 
+  /**
+   *
+   * \return the MME side of the S11 SAP
    */
   EpcS11SapMme* GetS11SapMme ();
 
-  /** 
-   * Add a new ENB to the MME. 
+  /**
+   * Add a new ENB to the MME.
    * \param imsi the unique identifier of the UE
-   * \param enbS1apSap the ENB side of the S1-AP SAP 
+   * \param enbS1apSap the ENB side of the S1-AP SAP
    */
-  void AddEnb (uint16_t egci, Ipv4Address enbS1UAddr, EpcS1apSapEnb* enbS1apSap); 
-  
-  /** 
+  void AddEnb (uint16_t egci, Ipv4Address enbS1UAddr, EpcS1apSapEnb* enbS1apSap);
+
+  /**
    * Add a new UE to the MME. This is the equivalent of storing the UE
-   * credentials before the UE is ever turned on. 
-   * 
+   * credentials before the UE is ever turned on.
+   *
    * \param imsi the unique identifier of the UE
    */
   void AddUe (uint64_t imsi);
 
-  /** 
+  uint8_t GetBearerCounter(uint64_t imsi);
+
+  /**
    * Add an EPS bearer to the list of bearers to be activated for this
    * UE. The bearer will be activated when the UE enters the ECM
    * connected state.
-   * 
+   *
    * \param imsi UE identifier
    * \param tft traffic flow template of the bearer
    * \param bearer QoS characteristics of the bearer
@@ -123,7 +125,7 @@ private:
 
   /**
    * Hold info on an EPS bearer to be activated
-   * 
+   *
    */
   struct BearerInfo
   {
@@ -131,10 +133,10 @@ private:
     EpsBearer bearer;
     uint8_t bearerId;
   };
-  
+
   /**
    * Hold info on a UE
-   * 
+   *
    */
   struct UeInfo : public SimpleRefCount<UeInfo>
   {
@@ -148,13 +150,13 @@ private:
 
   /**
    * UeInfo stored by IMSI
-   * 
-   */  
+   *
+   */
   std::map<uint64_t, Ptr<UeInfo> > m_ueInfoMap;
 
   /**
    * Hold info on a ENB
-   * 
+   *
    */
   struct EnbInfo : public SimpleRefCount<EnbInfo>
   {
@@ -165,18 +167,18 @@ private:
 
   /**
    * EnbInfo stored by EGCI
-   * 
+   *
    */
   std::map<uint16_t, Ptr<EnbInfo> > m_enbInfoMap;
 
 
-  
+
 
   EpcS1apSapMme* m_s1apSapMme;
 
   EpcS11SapMme* m_s11SapMme;
   EpcS11SapSgw* m_s11SapSgw;
-  
+
 };
 
 
