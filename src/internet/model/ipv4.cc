@@ -18,11 +18,12 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "ns3/assert.h" 
-#include "ns3/node.h" 
+#include "ns3/assert.h"
+#include "ns3/node.h"
 #include "ns3/boolean.h"
 #include "ipv4.h"
 #include "ns3/log.h"
+#include "ns3/packet.h"
 
 NS_LOG_COMPONENT_DEFINE ("Ipv4");
 
@@ -30,7 +31,7 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (Ipv4);
 
-TypeId 
+TypeId
 Ipv4::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::Ipv4")
@@ -40,7 +41,7 @@ Ipv4::GetTypeId (void)
                    MakeBooleanAccessor (&Ipv4::SetIpForward,
                                         &Ipv4::GetIpForward),
                    MakeBooleanChecker ())
-    .AddAttribute ("WeakEsModel", 
+    .AddAttribute ("WeakEsModel",
                    "RFC1122 term for whether host accepts datagram with a dest. address on another interface",
                    BooleanValue (true),
                    MakeBooleanAccessor (&Ipv4::SetWeakEsModel,
@@ -65,6 +66,25 @@ Ipv4::Ipv4 ()
 Ipv4::~Ipv4 ()
 {
   NS_LOG_FUNCTION (this);
+}
+
+void
+Ipv4::AddAddrToList(Ptr<Socket> sock)
+{
+    Ptr<Packet> p = sock->Recv();
+    Ipv4Header head;
+    p->PeekHeader(head);
+    m_addr.push_back(head.GetSource());
+}
+
+bool
+Ipv4::ContainsAddr(Ipv4Address addr)
+{
+    for(uint16_t i=0; i<m_addr.size(); i++){
+        if(m_addr[i]==addr)
+            return true;
+    }
+    return false;
 }
 
 } // namespace ns3
