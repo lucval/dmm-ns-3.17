@@ -189,6 +189,17 @@ def build(bld):
         'helper/ipv6-interface-container.cc',
         'helper/ipv6-routing-helper.cc',
         'model/ipv6-address-generator.cc',
+        'model/ipv4-netfilter-hook.cc',
+        'model/ipv4-netfilter.cc',
+        'model/netfilter-callback-chain.cc',
+        'model/netfilter-conntrack-tuple.cc',
+        'model/ip-conntrack-info.cc',
+        'model/ipv4-conntrack-l3-protocol.cc',
+        'model/tcp-conntrack-l4-protocol.cc',
+        'model/udp-conntrack-l4-protocol.cc',
+        'model/icmpv4-conntrack-l4-protocol.cc',
+        'model/ipv4-nat.cc',
+        'helper/ipv4-nat-helper.cc',
         ]
 
     internet_test = bld.create_ns3_module_test_library('internet')
@@ -298,6 +309,21 @@ def build(bld):
         'model/tcp-tx-buffer.h',
         'model/tcp-rx-buffer.h',
         'model/rtt-estimator.h',
+        'model/ipv4-netfilter.h',
+        'model/ipv4-netfilter-hook.h',
+        'model/netfilter-callback-chain.h',
+        'model/netfilter-conntrack-l3-protocol.h',
+        'model/netfilter-conntrack-l4-protocol.h',
+        'model/netfilter-conntrack-tuple.h',
+        'model/netfilter-tuple-hash.h',
+        'model/ip-conntrack-info.h',
+        'model/ipv4-conntrack-l3-protocol.h',
+        'model/tcp-conntrack-l4-protocol.h',
+        'model/udp-conntrack-l4-protocol.h',
+        'model/icmpv4-conntrack-l4-protocol.h',
+        'model/sgi-hashmap.h',
+        'model/ipv4-nat.h',
+        'helper/ipv4-nat-helper.h',
        ]
 
     if bld.env['NSC_ENABLED']:

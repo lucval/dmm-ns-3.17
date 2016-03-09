@@ -36,6 +36,7 @@ class Node;
 class NetDevice;
 class Packet;
 class Ipv4RoutingProtocol;
+class Ipv4Netfilter;
 
 /**
  * \ingroup internet
@@ -97,6 +98,22 @@ public:
    * \returns smart pointer to Ipv4RoutingProtocol object, or null pointer if none
    */
   virtual Ptr<Ipv4RoutingProtocol> GetRoutingProtocol (void) const = 0;
+
+  /**
+   * \brief Add a netfilter object to be used by this IPv4 stack
+   *
+   * This call will replace any previously added Ipv4Netfilter object.
+   *
+   * \param netfilter smart pointer to Ipv4Netfilter object
+   */
+  virtual void SetNetfilter (Ptr<Ipv4Netfilter> netfilter) = 0;
+
+  /**
+   * \brief Get the Ipv4Netfilter object used by this Ipv4 stack
+   *
+   * \returns smart pointer to Ipv4Netfilter object, or null pointer if none
+   */
+  virtual Ptr<Ipv4Netfilter> GetNetfilter (void) const = 0;
 
   /**
    * \param device device to add to the list of Ipv4 interfaces

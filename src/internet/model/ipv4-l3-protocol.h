@@ -49,6 +49,7 @@ class Socket;
 class Ipv4RawSocketImpl;
 class IpL4Protocol;
 class Icmpv4L4Protocol;
+class Ipv4Netfilter;
 
 
 /**
@@ -104,6 +105,9 @@ public:
   void SetRoutingProtocol (Ptr<Ipv4RoutingProtocol> routingProtocol);
   Ptr<Ipv4RoutingProtocol> GetRoutingProtocol (void) const;
 
+  void SetNetfilter (Ptr<Ipv4Netfilter> netfilter);
+  Ptr<Ipv4Netfilter> GetNetfilter (void) const;
+
   Ptr<Socket> CreateRawSocket (void);
   void DeleteRawSocket (Ptr<Socket> socket);
 
@@ -125,6 +129,7 @@ public:
    *
    * This method is typically called by lower layers
    * to forward packets up the stack to the right protocol.
+   * It is also called from NodeImpl::GetUdp for example.
    */
   Ptr<IpL4Protocol> GetProtocol (int protocolNumber) const;
   /**
@@ -234,7 +239,6 @@ private:
     uint8_t protocol,
     uint16_t payloadSize,
     uint8_t ttl,
-    uint8_t tos,
     bool mayFragment);
 
   void
@@ -298,7 +302,6 @@ private:
   bool m_weakEsModel;
   L4List_t m_protocols;
   Ipv4InterfaceList m_interfaces;
-  uint8_t m_defaultTos;
   uint8_t m_defaultTtl;
   uint16_t m_identification;
   Ptr<Node> m_node;
@@ -314,6 +317,7 @@ private:
   TracedCallback<const Ipv4Header &, Ptr<const Packet>, DropReason, Ptr<Ipv4>, uint32_t> m_dropTrace;
 
   Ptr<Ipv4RoutingProtocol> m_routingProtocol;
+  Ptr<Ipv4Netfilter> m_netfilter;
 
   SocketList m_sockets;
 
