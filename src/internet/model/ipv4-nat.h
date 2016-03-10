@@ -33,6 +33,10 @@
 #include "netfilter-callback-chain.h"
 
 #include "netfilter-tuple-hash.h"
+#include "netfilter-conntrack-tuple.h"
+#include "netfilter-conntrack-l3-protocol.h"
+#include "netfilter-conntrack-l4-protocol.h"
+#include "ip-conntrack-info.h"
 #include "ipv4.h"
 
 
@@ -313,6 +317,9 @@ public:
    */
   void SetOutside (int32_t interfaceIndex);
 
+  void ReceivePacketIn(Ptr<Socket> sock);
+  void ReceivePacketEg(Ptr<Socket> sock);
+
   typedef std::list<Ipv4StaticNatRule> StaticNatRules;
   typedef std::list<Ipv4DynamicNatRule> DynamicNatRules;
   typedef std::list<Ipv4DynamicNatTuple> DynamicNatTuple;
@@ -391,13 +398,15 @@ private:
   StaticNatRules m_statictable;
   DynamicNatRules m_dynamictable;
   DynamicNatTuple m_dynatuple;
-  int32_t m_insideInterface;
-  int32_t m_outsideInterface;
+  std::vector<int32_t> m_insideInterfaces;
+  std::vector<int32_t> m_outsideInterfaces;
   Ipv4Address m_globalip;
   Ipv4Mask m_globalmask;
   uint16_t m_startport;
   uint16_t m_endport;
   uint16_t m_currentPort;
+
+  std::map<Ipv4Address, Time> m_ts;
 
 };
 

@@ -38,11 +38,11 @@
 #include <ns3/epc-tft.h>
 #include <ns3/lte-enb-rrc.h>
 #include <ns3/mobility-model.h>
+#include <ns3/ipv4-nat.h>
 #include <ns3/arp-cache.h>
-#include <ns3/ipv4-interface.h>
 
 #define MAKE_PATH_SIZE 9+20+20
-#define OFP_MODIFY_STATE_SIZE 56+20+20
+#define RULE_UPDATE_SIZE 17+20+20
 
 namespace ns3 {
 
@@ -410,8 +410,8 @@ public:
   int64_t AssignStreams (NetDeviceContainer c, int64_t stream);
 
   void CreateController (Ptr<Node> controller);
-  void ConnectSocketsIngress (Ptr<Node> ofNode, Ipv4Address ofNodeAddress);
-  void ConnectSocketsEgress (Ptr<Node> ofNode, Ipv4Address egressAddress, Ipv4Address pgwAddress);
+  void ConnectSocketsIngress (Ptr<Node> natNode, Ipv4Address ingressNatAddress, Ptr<Ipv4Nat> nat);
+  void ConnectSocketsEgress (Ptr<Node> natNode, Ipv4Address ingressNatAddress, Ptr<Ipv4Nat> nat, Ipv4Address pgwAddress);
   void AttachMme (Ptr<Node> mme, Ipv4Address pgwAddress);
   void ConnectMmes(Ptr<Node> source, Ptr<Node> destination, Ipv4Address tPgwAddress);
 
@@ -469,17 +469,15 @@ private:
   uint64_t m_imsiCounter;
   uint16_t m_cellIdCounter;
 
-  /*mme stuffs*/
-  uint16_t m_mmePort;
-  std::map<Ipv4Address, Ptr<Socket> > m_mmeMap;
-  std::map<Ipv4Address, Ptr<Socket> > m_mmeSourceMap;
-
   /*controller stuffs*/
   Ptr<Node> m_controller;
   std::map<Ipv4Address, Ptr<Socket> > m_controllerSocketMapEg;
   std::vector <Ptr<Socket> > m_controllerSocketVectorIn;
-  std::map<Ipv4Address, Ptr<Node> > m_egress;
-  std::vector <Ptr<Node> > m_ingress;
+
+  /*mme stuffs*/
+  uint16_t m_mmePort;
+  std::map<Ipv4Address, Ptr<Socket> > m_mmeMap;
+  std::map<Ipv4Address, Ptr<Socket> > m_mmeSourceMap;
 
   /* arp stuffs */
   NodeContainer m_arpNodes;

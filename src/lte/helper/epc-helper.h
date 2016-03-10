@@ -31,7 +31,7 @@
 #include <ns3/epc-tft.h>
 #include <ns3/eps-bearer.h>
 #include <ns3/virtual-net-device.h>
-#include <ns3/mac48-address.h>
+#include <ns3/internet-module.h>
 
 namespace ns3 {
 
@@ -209,7 +209,6 @@ private:
   uint16_t m_current;
   uint16_t m_count;
   NodeContainer m_ues;
-  NetDeviceContainer m_ofDevs;
 };
 
 

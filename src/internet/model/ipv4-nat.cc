@@ -19,7 +19,14 @@
  */
 #include "ns3/log.h"
 #include "ns3/uinteger.h"
+#include "ns3/seq-ts-header.h"
 #include "ipv4-netfilter.h"
+
+#include "ip-conntrack-info.h"
+#include "ipv4-conntrack-l3-protocol.h"
+#include "tcp-conntrack-l4-protocol.h"
+#include "udp-conntrack-l4-protocol.h"
+#include "icmpv4-conntrack-l4-protocol.h"
 
 #include "tcp-header.h"
 #include "udp-header.h"
@@ -28,6 +35,8 @@
 #include "ns3/output-stream-wrapper.h"
 #include "ipv4-nat.h"
 #include "ipv4.h"
+#include "ns3/ipv4-static-routing.h"
+#include "ns3/ipv4-static-routing-helper.h"
 
 #include <iomanip>
 
@@ -54,8 +63,6 @@ Ipv4Nat::GetTypeId (void)
 }
 
 Ipv4Nat::Ipv4Nat ()
-  : m_insideInterface (-1),
-    m_outsideInterface (-1)
 {
   NS_LOG_FUNCTION (this);
 
@@ -330,11 +337,12 @@ Ipv4Nat::DoNatPreRouting (Hooks_t hookNumber, Ptr<Packet> p,
     }
 
   Ipv4Header ipHeader;
-
-  NS_LOG_DEBUG ("Input device " << m_ipv4->GetInterfaceForDevice (in) << " inside interface " << m_insideInterface);
-  NS_LOG_DEBUG ("Output device " << m_ipv4->GetInterfaceForDevice (out) << " outside interface " << m_outsideInterface);
   p->RemoveHeader (ipHeader);
-  if (m_ipv4->GetInterfaceForDevice (in) == m_outsideInterface)
+
+  for(uint16_t i=0; i<m_outsideInterfaces.size(); i++)
+  {
+   NS_LOG_DEBUG ("Output device " << m_ipv4->GetInterfaceForDevice (out) << " outside interface " << m_outsideInterfaces[i]);
+   if (m_ipv4->GetInterfaceForDevice (in) == m_outsideInterfaces[i])
     {
       // outside interface is the input interface, NAT the destination addr
       // so that the NAT does not try to locally deliver the packet
@@ -421,6 +429,7 @@ Ipv4Nat::DoNatPreRouting (Hooks_t hookNumber, Ptr<Packet> p,
         }
 
     }
+  }
   p->AddHeader (ipHeader);
   return 0;
 }
@@ -437,12 +446,13 @@ Ipv4Nat::DoNatPostRouting (Hooks_t hookNumber, Ptr<Packet> p,
     }
 
   Ipv4Header ipHeader;
-
-  NS_LOG_DEBUG ("Input device " << m_ipv4->GetInterfaceForDevice (in) << " inside interface " << m_insideInterface);
-  NS_LOG_DEBUG ("Output device " << m_ipv4->GetInterfaceForDevice (out) << " outside interface " << m_outsideInterface);
   p->RemoveHeader (ipHeader);
-  if (m_ipv4->GetInterfaceForDevice (out) == m_outsideInterface)
-    {
+
+  for(uint16_t i=0; i<m_outsideInterfaces.size(); i++)
+  {
+   NS_LOG_DEBUG ("Output device " << m_ipv4->GetInterfaceForDevice (out) << " outside interface " << m_outsideInterfaces[i]);
+   if (m_ipv4->GetInterfaceForDevice (in) == m_outsideInterfaces[i])
+   {
       // matching output interface, consider whether to NAT the source
       // address and port
       NS_LOG_DEBUG ("evaluating packet with src " << ipHeader.GetSource () << " dst " << ipHeader.GetDestination ());
@@ -575,6 +585,7 @@ Ipv4Nat::DoNatPostRouting (Hooks_t hookNumber, Ptr<Packet> p,
 
         }
     }
+  }
   p->AddHeader (ipHeader);
   return 0;
 }
@@ -644,17 +655,16 @@ Ipv4Nat::GetNewOutsidePort ()
 void
 Ipv4Nat::SetInside (int32_t interfaceIndex)
 {
-  NS_LOG_FUNCTION (this << interfaceIndex);
-  m_insideInterface = interfaceIndex;
+  NS_LOG_FUNCTION (this);
+  m_insideInterfaces.push_back(interfaceIndex);
 
 }
 
 void
 Ipv4Nat::SetOutside (int32_t interfaceIndex)
 {
-
-  NS_LOG_FUNCTION (this << interfaceIndex);
-  m_outsideInterface = interfaceIndex;
+  NS_LOG_FUNCTION (this);
+  m_outsideInterfaces.push_back(interfaceIndex);
 }
 
 
@@ -678,12 +688,80 @@ Ipv4Nat::AddStaticRule (const Ipv4StaticNatRule& rule)
       NS_LOG_WARN ("Adding node's own IP address as the global NAT address");
       return;
     }
-  NS_ASSERT_MSG (m_outsideInterface > -1, "Forgot to assign outside interface");
-  // Add address to outside interface so that node will proxy ARP for it
-  Ipv4Mask outsideMask = m_ipv4->GetAddress (m_outsideInterface, 0).GetMask ();
-  Ipv4InterfaceAddress natAddress (rule.GetGlobalIp (), outsideMask);
-  m_ipv4->AddAddress (m_outsideInterface, natAddress);
+ for(uint16_t i=0; i<m_outsideInterfaces.size(); i++){
+    NS_ASSERT_MSG (m_outsideInterfaces[i] > -1, "Forgot to assign outside interface");
+    // Add address to outside interface so that node will proxy ARP for it
+    //Ipv4Mask outsideMask = m_ipv4->GetAddress (m_outsideInterfaces[i], 0).GetMask ();
+    Ipv4InterfaceAddress natAddress (rule.GetGlobalIp (), Ipv4Mask("255.255.255.255"));
+    m_ipv4->AddAddress (m_outsideInterfaces[i], natAddress);
+  }
 }
+
+
+void
+Ipv4Nat::ReceivePacketIn(Ptr<Socket> sock)
+{
+    NS_LOG_FUNCTION (this);
+
+    Ptr<Packet> p = sock->Recv();
+
+    SeqTsHeader seqTs;
+    p->RemoveHeader(seqTs);
+    Time ts = seqTs.GetTs();
+
+    Ipv4Header ipHeader;
+    p->RemoveHeader(ipHeader);
+    Ipv4Address oldAddress = ipHeader.GetSource();
+    Ipv4Address newAddress = ipHeader.GetDestination();
+
+    if(ts.Compare(m_ts[oldAddress]) <= 0)
+        return;
+
+    for(uint16_t i=0; i<GetNStaticRules(); i++)
+    {
+        Ipv4StaticNatRule rule = GetStaticRule(i);
+        if(rule.GetGlobalIp() == oldAddress)
+            RemoveStaticRule(i);
+    }
+
+    Ipv4StaticNatRule newRule(newAddress, oldAddress);
+    m_ts[oldAddress]=ts;
+    AddStaticRule(newRule);
+}
+
+
+void
+Ipv4Nat::ReceivePacketEg(Ptr<Socket> sock)
+{
+    NS_LOG_FUNCTION (this);
+
+    Ptr<Packet> p = sock->Recv();
+
+    SeqTsHeader seqTs;
+    p->RemoveHeader(seqTs);
+    Time ts = seqTs.GetTs();
+
+    Ipv4Header ipHeader;
+    p->RemoveHeader(ipHeader);
+    Ipv4Address oldAddress = ipHeader.GetSource();
+    Ipv4Address newAddress = ipHeader.GetDestination();
+
+    if(ts.Compare(m_ts[oldAddress]) <= 0)
+        return;
+
+    for(uint16_t i=0; i<GetNStaticRules(); i++)
+    {
+        Ipv4StaticNatRule rule = GetStaticRule(i);
+        if(rule.GetLocalIp() == oldAddress){
+            RemoveStaticRule(i);
+        }
+    }
+
+    Ipv4StaticNatRule newRule(oldAddress, newAddress);
+    m_ts[oldAddress]=ts;
+    AddStaticRule(newRule);
+}
+
 
 Ipv4StaticNatRule::Ipv4StaticNatRule (Ipv4Address localip, uint16_t locprt, Ipv4Address globalip,uint16_t gloprt, uint16_t protocol)
 {

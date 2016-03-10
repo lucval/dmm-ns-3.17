@@ -822,7 +822,6 @@ LteHelper::DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress,
                                 Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
   NS_LOG_FUNCTION (this << ue);
-  NS_LOG_UNCOND("handoverrrrrrrrrrrrrrrr");
 
   Ipv4Address identifierAddress = ue->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal ();
 
@@ -860,11 +859,8 @@ LteHelper::DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddre
                                              Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
   NS_LOG_FUNCTION (this << ue);
-  NS_LOG_UNCOND("handover with MME relocation");
 
   Ipv4Address identifierAddress = ue->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal ();
-
-  NS_LOG_UNCOND(identifierAddress);
 
   Ptr<NetDevice> ueDev = ue->GetDevice(0);
   Ptr<LteUeNetDevice> lteUeDev = ueDev->GetObject<LteUeNetDevice>();
@@ -881,8 +877,6 @@ LteHelper::DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddre
   UpdateArp(m_epcHelper->Attach(ueDev), m_epcHelper->m_mac);
 
   Ipv4Address locatorAddress = ue->GetObject<Ipv4> ()->GetAddress(1,1).GetLocal ();
-
-  NS_LOG_UNCOND(locatorAddress);
 
   /* create a dummy packet */
   Ptr<Packet> p = Create<Packet> ();
@@ -906,23 +900,18 @@ LteHelper::ReceiveFromMme(Ptr<Socket> sock)
     p->RemoveHeader(pgwIpHeader);
     m_signalingBytes = m_signalingBytes + MAKE_PATH_SIZE;
 
-    Ipv4Header oldHeader, newHeader;
-    p->PeekHeader(oldHeader);
-    Ipv4Address identifier = oldHeader.GetSource();
-    Ipv4Address locator = oldHeader.GetDestination();
+    SeqTsHeader seqTs;
+    p->AddHeader(seqTs);
 
     for(uint16_t h=0; h<m_controllerSocketVectorIn.size(); h++){
         m_controllerSocketVectorIn[h]->Send(p);
-        m_signalingBytes = m_signalingBytes + OFP_MODIFY_STATE_SIZE;
+        m_signalingBytes = m_signalingBytes + RULE_UPDATE_SIZE;
     }
 
-    p->RemoveHeader(oldHeader);
-    newHeader.SetSource(locator);
-    newHeader.SetDestination(identifier);
-    p->AddHeader(newHeader);
     m_controllerSocketMapEg[pgwIpHeader.GetSource()]->Send(p);
-    Ptr<Node> egr = m_egress[pgwIpHeader.GetSource()];
-    m_signalingBytes = m_signalingBytes + OFP_MODIFY_STATE_SIZE;
+    m_signalingBytes = m_signalingBytes + RULE_UPDATE_SIZE;
+
+    p->RemoveHeader(seqTs);
 }
 
 void
@@ -1525,33 +1514,32 @@ LteHelper::CreateController (Ptr<Node> controller)
 }
 
 void
-LteHelper::ConnectSocketsIngress (Ptr<Node> ofNode, Ipv4Address ofNodeAddress)
+LteHelper::ConnectSocketsIngress (Ptr<Node> natNode, Ipv4Address ingressNatAddress, Ptr<Ipv4Nat> nat)
 {
     NS_LOG_FUNCTION (this);
-    Ptr<Socket> ofSocket = Socket::CreateSocket(ofNode, TypeId::LookupByName("ns3::UdpSocketFactory"));
-    InetSocketAddress remote = InetSocketAddress(ofNodeAddress, 7000);
-    int retval = ofSocket->Bind(remote);
+    Ptr<Socket> natSocket = Socket::CreateSocket(natNode, TypeId::LookupByName("ns3::UdpSocketFactory"));
+    InetSocketAddress remote = InetSocketAddress(ingressNatAddress, 7000);
+    int retval = natSocket->Bind(remote);
     NS_ASSERT(retval == 0);
-    ofSocket->SetRecvCallback (MakeCallback (&Ipv4::AddAddrToList, ofNode->GetObject<Ipv4>()));
+    natSocket->SetRecvCallback (MakeCallback (&Ipv4Nat::ReceivePacketIn, nat));
     Ptr<Socket> cs = Socket::CreateSocket(m_controller, TypeId::LookupByName ("ns3::UdpSocketFactory"));
     cs->Connect(remote);
     m_controllerSocketVectorIn.push_back(cs);
-    m_ingress.push_back(ofNode);
 }
 
 void
-LteHelper::ConnectSocketsEgress (Ptr<Node> ofNode, Ipv4Address egressAddress, Ipv4Address pgwAddress)
+LteHelper::ConnectSocketsEgress (Ptr<Node> natNode, Ipv4Address egressNatAddress, Ptr<Ipv4Nat> nat, Ipv4Address pgwAddress)
 {
     NS_LOG_FUNCTION (this);
-    Ptr<Socket> ofSocket = Socket::CreateSocket(ofNode, TypeId::LookupByName("ns3::UdpSocketFactory"));
-    InetSocketAddress remote = InetSocketAddress(egressAddress, 7000);
-    int retval = ofSocket->Bind(remote);
+    //Ipv4Address pgwAddress = natNode->GetObject<Ipv4>()->GetAddress(1,0).GetLocal();
+    Ptr<Socket> natSocket = Socket::CreateSocket(natNode, TypeId::LookupByName("ns3::UdpSocketFactory"));
+    InetSocketAddress remote = InetSocketAddress(egressNatAddress, 7000);
+    int retval = natSocket->Bind(remote);
     NS_ASSERT(retval == 0);
-    ofSocket->SetRecvCallback (MakeCallback (&Ipv4::AddAddrToList, ofNode->GetObject<Ipv4>()));
+    natSocket->SetRecvCallback (MakeCallback (&Ipv4Nat::ReceivePacketEg, nat));
     Ptr<Socket> cs = Socket::CreateSocket(m_controller, TypeId::LookupByName ("ns3::UdpSocketFactory"));
     cs->Connect(remote);
     m_controllerSocketMapEg[pgwAddress] = cs;
-    m_egress[pgwAddress] = ofNode;
 }
 
 void
@@ -1562,7 +1550,7 @@ LteHelper::AttachMme(Ptr<Node> mme, Ipv4Address pgwAddress)
     InetSocketAddress controllerAddress = InetSocketAddress(m_controller->GetObject<Ipv4>()->GetAddress(1,0).GetLocal(), m_mmePort++);
     int retval = controllerSocket->Bind(controllerAddress);
     NS_ASSERT(retval == 0);
-    controllerSocket->SetRecvCallback (MakeCallback (&LteHelper::ReceiveFromMme, this));//FIXME
+    controllerSocket->SetRecvCallback (MakeCallback (&LteHelper::ReceiveFromMme, this));
     Ptr<Socket> mmeSock = Socket::CreateSocket(mme, TypeId::LookupByName ("ns3::UdpSocketFactory"));
     mmeSock->Connect(controllerAddress);
     m_mmeMap[pgwAddress] = mmeSock;
