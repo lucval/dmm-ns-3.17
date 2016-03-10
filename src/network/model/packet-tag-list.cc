@@ -133,11 +133,6 @@ void
 PacketTagList::Add (const Tag &tag) const
 {
   NS_LOG_FUNCTION (this << &tag);
-  // ensure this id was not yet added
-  for (struct TagData *cur = m_next; cur != 0; cur = cur->next) 
-    {
-      NS_ASSERT (cur->tid != tag.GetInstanceTypeId ());
-    }
   struct TagData *head = AllocData ();
   head->count = 1;
   head->next = 0;
