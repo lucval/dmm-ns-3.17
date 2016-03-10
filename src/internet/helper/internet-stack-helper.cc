@@ -175,6 +175,7 @@
 #include "ns3/ipv6-extension-demux.h"
 #include "ns3/ipv6-extension-header.h"
 #include "ns3/global-router-interface.h"
+#include "ns3/ipv4-netfilter.h"
 #include <limits>
 #include <map>
 
@@ -398,10 +399,16 @@ InternetStackHelper::Install (Ptr<Node> node) const
       CreateAndAggregateObjectFromTypeId (node, "ns3::ArpL3Protocol");
       CreateAndAggregateObjectFromTypeId (node, "ns3::Ipv4L3Protocol");
       CreateAndAggregateObjectFromTypeId (node, "ns3::Icmpv4L4Protocol");
+      CreateAndAggregateObjectFromTypeId (node, "ns3::UdpL4Protocol");
+      node->AggregateObject (m_tcpFactory.Create<Object> ());
+      Ptr<PacketSocketFactory> factory = CreateObject<PacketSocketFactory> ();
+      node->AggregateObject (factory);
       // Set routing
       Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
       Ptr<Ipv4RoutingProtocol> ipv4Routing = m_routing->Create (node);
       ipv4->SetRoutingProtocol (ipv4Routing);
+      Ptr<Ipv4Netfilter> ipv4nf = CreateObject<Ipv4Netfilter> ();
+      ipv4->SetNetfilter (ipv4nf);
     }
 
   if (m_ipv6Enabled)
@@ -416,7 +423,7 @@ InternetStackHelper::Install (Ptr<Node> node) const
 
       CreateAndAggregateObjectFromTypeId (node, "ns3::Ipv6L3Protocol");
       CreateAndAggregateObjectFromTypeId (node, "ns3::Icmpv6L4Protocol");
-      // Set routing
+      /* TODO add UdpL4Protocol/TcpL4Protocol for IPv6 */
       Ptr<Ipv6> ipv6 = node->GetObject<Ipv6> ();
       Ptr<Ipv6RoutingProtocol> ipv6Routing = m_routingv6->Create (node);
       ipv6->SetRoutingProtocol (ipv6Routing);
@@ -424,14 +431,6 @@ InternetStackHelper::Install (Ptr<Node> node) const
       /* register IPv6 extensions and options */
       ipv6->RegisterExtensions ();
       ipv6->RegisterOptions ();
-    }
-
-  if (m_ipv4Enabled || m_ipv6Enabled)
-    {
-      CreateAndAggregateObjectFromTypeId (node, "ns3::UdpL4Protocol");
-      node->AggregateObject (m_tcpFactory.Create<Object> ());
-      Ptr<PacketSocketFactory> factory = CreateObject<PacketSocketFactory> ();
-      node->AggregateObject (factory);
     }
 }
 

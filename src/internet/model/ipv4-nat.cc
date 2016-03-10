@@ -86,7 +86,7 @@ Ipv4Nat::NotifyNewAggregate ()
       if (ipv4 != 0)
         {
           Ptr<Ipv4Netfilter> netfilter = ipv4->GetNetfilter ();
-          if (ipv4 != 0)
+          if (netfilter != 0)
             {
               m_ipv4 = ipv4;
               // Set callbacks on netfilter pointer
