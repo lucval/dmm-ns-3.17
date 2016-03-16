@@ -119,22 +119,22 @@ GeneralUdpServer::StartApplication (void)
   if (m_type == 0) //Video
   {
 	  int m_nodeId = GetNode ()->GetId ();
-	  ClientFile1 << "Video" << "_" << m_nodeId << "_" <<  "_RX_time.csv";
+	  ClientFile1 << "traces/Video" << "_" << m_nodeId << "_" <<  "_RX_time.csv";
   }
   if (m_type == 1) //Game Uplink
     {
   	  int m_nodeId = GetNode ()->GetId ();
-  	  ClientFile1 << "Gaming_UL" << "_" << m_nodeId << "_" <<  "_RX_time.csv";
+  	  ClientFile1 << "traces/Gaming_UL" << "_" << m_nodeId << "_" <<  "_RX_time.csv";
     }
   if (m_type == 2) //Game Downlink
     {
   	  int m_nodeId = GetNode ()->GetId ();
-  	  ClientFile1 << "Gaming_DL" << "_" << m_nodeId << "_" <<  "_RX_time.csv";
+  	  ClientFile1 << "traces/Gaming_DL" << "_" << m_nodeId << "_" <<  "_RX_time.csv";
     }
   if (m_type == 3) //Game Downlink
       {
     	  int m_nodeId = GetNode ()->GetId ();
-    	  ClientFile1 << "Voice" << "_" << m_nodeId << "_" <<  "_RX_time.csv";
+    	  ClientFile1 << "traces/Voice" << "_" << m_nodeId << "_" <<  "_RX_time.csv";
       }
 
   if (m_socket == 0)
