@@ -80,7 +80,7 @@ namespace ns3 {
  */
 
 /**
- * \ingroup openflow 
+ * \ingroup openflow
  * \brief A net device that switches multiple LAN segments via an OpenFlow-compatible flow table
  */
 class OpenFlowSwitchNetDevice : public NetDevice
@@ -146,6 +146,9 @@ public:
    * \return 0 if everything's ok, otherwise an error number.
    */
   int AddVPort (const ofp_vport_mod *ovpm);
+
+  void AddAddr (Ipv4Address addr);
+  void RemoveAddr (Ipv4Address addr);
 
   /**
    * \brief Stats callback is ready for a dump.
@@ -213,6 +216,8 @@ public:
    */
   vport_table_t GetVPortTable ();
 
+  void ModifyBuffer (uint64_t packet_uid, ofpbuf* buffer);
+
   ///\name From NetDevice
   //\{
   virtual void SetIfIndex (const uint32_t index);
@@ -246,7 +251,7 @@ protected:
 
   /**
    * \internal
-   * 
+   *
    * Called when a packet is received on one of the switch's ports.
    *
    * \param netdev The port the packet was received on.
@@ -297,7 +302,7 @@ private:
 
   /**
    * \internal
-   * 
+   *
    * Send packets out all the ports except the originating one
    *
    * \param packet_uid Packet UID; used to fetch the packet and its metadata.
@@ -309,7 +314,7 @@ private:
 
   /**
    * \internal
-   * 
+   *
    * Sends a copy of the Packet over the provided output port
    *
    * \param packet_uid Packet UID; used to fetch the packet and its metadata.
@@ -332,8 +337,8 @@ private:
   void OutputPort (uint32_t packet_uid, int in_port, int out_port, bool ignore_no_fwd);
 
   /**
-   * \internal 
-   * 
+   * \internal
+   *
    * Sends a copy of the Packet to the controller. If the packet can be saved
    * in an OpenFlow buffer, then only the first 'max_len' bytes of the packet
    * are sent; otherwise, all of the packet is sent.
@@ -347,7 +352,7 @@ private:
 
   /**
    * \internal
-   * 
+   *
    * If an error message happened during the controller's request, send it to the controller.
    *
    * \param type The type of error.
@@ -359,7 +364,7 @@ private:
 
   /**
    * \internal
-   * 
+   *
    * Send a reply about this OpenFlow switch's features to the controller.
    *
    * List of capabilities and actions to support are found in the specification
@@ -457,7 +462,7 @@ private:
    * \param buffer Buffer of the packet received.
    * \param packet_uid Packet UID; used to fetch the packet and its metadata.
    * \param port The port the packet was received over.
-   * \param send_to_controller 
+   * \param send_to_controller
    */
   void FlowTableLookup (sw_flow_key key, ofpbuf* buffer, uint32_t packet_uid, int port, bool send_to_controller);
 
@@ -544,6 +549,9 @@ private:
 
   sw_chain *m_chain;             ///< Flow Table; forwarding rules.
   vport_table_t m_vportTable;    ///< Virtual Port Table
+
+  std::vector<uint64_t> m_received;
+
 };
 
 } // namespace ns3

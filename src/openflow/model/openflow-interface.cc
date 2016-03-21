@@ -353,7 +353,7 @@ Stats::PortStatsDump (Ptr<OpenFlowSwitchNetDevice> swtch, PortStatsState *s, ofp
           ops->collisions   = htonll (-1);
           ops->mpls_ttl0_dropped = htonll (p.mpls_ttl0_dropped);
           ops++;
-        } 
+        }
       else if (port >= OFPP_VP_START && port <= OFPP_VP_END) // virtual port?
         {
           // lookup the virtual port
@@ -494,9 +494,10 @@ Action::Execute (ofp_action_type type, ofpbuf *buffer, sw_flow_key *key, const o
       set_dl_addr (buffer, key, ah);
       break;
     case OFPAT_SET_NW_SRC:
-    case OFPAT_SET_NW_DST:
+    case OFPAT_SET_NW_DST:{
       set_nw_addr (buffer, key, ah);
       break;
+      }
     case OFPAT_SET_TP_SRC:
     case OFPAT_SET_TP_DST:
       set_tp_port (buffer, key, ah);
@@ -725,12 +726,12 @@ Controller::StartDump (StatsDumpCallback* cb)
         {
           error = cb->swtch->StatsDump (cb);
         }
-	
+
       if (error != 0) // When the reply is complete, error will equal zero if there's no errors.
         {
           NS_LOG_WARN ("Dump Callback Error: " << strerror (-error));
         }
-	
+
       // Clean up
       cb->swtch->StatsDone (cb);
     }
@@ -799,6 +800,25 @@ LearningController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbu
       key.wildcards = 0;
       flow_extract (buffer, port != -1 ? port : OFPP_NONE, &key.flow);
 
+      if(opi->reason == OFPR_ACTION)
+      {
+        ip_header* ip_h = (ip_header*)buffer->l3;
+	    Ipv4Address src = Ipv4Address(ntohl(ip_h->ip_dst));
+        AddrToPair atpair = m_addr[swtch->GetNode()];
+        AddrToPort atport = atpair[src];
+        ofp_action_nw_addr action[2];
+        action[0].type = OFPAT_SET_NW_DST;
+        action[0].len = htons (sizeof(ofp_action_nw_addr));
+        action[0].nw_addr = htonl(atport.first.Get());
+        action[1].type = htons (OFPAT_OUTPUT);
+        action[1].len = htons (sizeof(ofp_action_output));
+        action[1].port = atport.second;
+
+        ofp_flow_mod* ofm3 = BuildFlow (key, opi->buffer_id, OFPFC_ADD, action, sizeof(action), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+        SendToSwitch (swtch, ofm3, ofm3->header.length);
+        return;
+      }
+
       uint16_t out_port = OFPP_FLOOD;
       uint16_t in_port = ntohs (key.flow.in_port);
 
@@ -807,8 +827,8 @@ LearningController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbu
       dst_addr.CopyFrom (key.flow.dl_dst);
       if (!dst_addr.IsBroadcast ())
         {
-          LearnState_t::iterator st = m_learnState.find (dst_addr);
-          if (st != m_learnState.end ())
+          LearnState_t::iterator st = m_learnState[swtch].find (dst_addr);
+          if (st != m_learnState[swtch].end ())
             {
               out_port = st->second.port;
             }
@@ -835,12 +855,12 @@ LearningController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbu
       // We can learn a specific port for the source address for future use.
       Mac48Address src_addr;
       src_addr.CopyFrom (key.flow.dl_src);
-      LearnState_t::iterator st = m_learnState.find (src_addr);
-      if (st == m_learnState.end ()) // We haven't learned our source MAC yet.
+      LearnState_t::iterator st = m_learnState[swtch].find (src_addr);
+      if (st == m_learnState[swtch].end ()) // We haven't learned our source MAC yet.
         {
           LearnedState ls;
           ls.port = in_port;
-          m_learnState.insert (std::make_pair (src_addr,ls));
+          m_learnState[swtch].insert (std::make_pair (src_addr,ls));
           NS_LOG_INFO ("Learned that " << src_addr << " can be found over port " << in_port);
 
           // Learn src_addr goes to a certain port.
@@ -860,9 +880,60 @@ LearningController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbu
 }
 
 void
+LearningController::InitFlows (Ptr<OpenFlowSwitchNetDevice> swtch, Mac48Address address, uint16_t port)
+{
+    LearnedState ls;
+    ls.port = ++port;
+    m_learnState[swtch].insert (std::make_pair (address,ls));
+    NS_LOG_INFO ("Learned that " << address << " can be found over port " << port);
+}
+
+void
+LearningController::CreateNwSetFieldAction (Ptr<Node> node, Ipv4Address oldAddr, Ipv4Address newAddr)
+{
+    AddrToPair atpair = m_addr[node];
+    atpair[oldAddr] = std::make_pair(newAddr, GetDlPort(node->GetId()));
+    m_addr[node] = atpair;
+}
+
+uint16_t
+GetDlPort(uint32_t id)
+{
+    switch(id) {
+        case 1:
+            return 9;
+        case 3:
+            return 1;
+        case 6:
+            return 2;
+        case 8:
+            return 7;
+	case 21:
+	    return 3;
+	case 23:
+	    return 1;
+	case 25:
+            return 3;
+	case 28:
+            return 4;
+	case 31:
+	    return 1;
+	case 34:
+            return 1;
+	case 36:
+	    return 1;
+	case 40:
+	    return 1;
+        default:
+            return 0;
+    }
+}
+
+void
 ExecuteActions (Ptr<OpenFlowSwitchNetDevice> swtch, uint64_t packet_uid, ofpbuf* buffer, sw_flow_key *key, const ofp_action_header *actions, size_t actions_len, int ignore_no_fwd)
 {
   NS_LOG_FUNCTION_NOARGS ();
+
   /* Every output action needs a separate clone of 'buffer', but the common
    * case is just a single output action, so that doing a clone and then
    * freeing the original buffer is wasteful.  So the following code is
@@ -904,10 +975,11 @@ ExecuteActions (Ptr<OpenFlowSwitchNetDevice> swtch, uint64_t packet_uid, ofpbuf*
         }
       else
         {
-          uint16_t type = ntohs (ah->type);
+          uint16_t type = ah->type;
           if (Action::IsValidType ((ofp_action_type)type)) // Execute a built-in OpenFlow action against 'buffer'.
             {
-              Action::Execute ((ofp_action_type)type, buffer, key, ah);
+	          Action::Execute ((ofp_action_type)type, buffer, key, ah);
+              swtch->ModifyBuffer(packet_uid, buffer);
             }
           else if (type == OFPAT_VENDOR)
             {
@@ -941,10 +1013,10 @@ ValidateActions (const sw_flow_key *key, const ofp_action_header *actions, size_
         * and that the action length is a multiple of 64 bits. */
       if ((actions_len < len) || (len % 8) != 0)
         {
-          return OFPBAC_BAD_LEN;
+	  return OFPBAC_BAD_LEN;
         }
 
-      type = ntohs (ah->type);
+      type = ah->type;
       if (Action::IsValidType ((ofp_action_type)type)) // Validate built-in OpenFlow actions.
         {
           err = Action::Validate ((ofp_action_type)type, len, key, ah);
@@ -1014,7 +1086,7 @@ ExecuteVPortActions (Ptr<OpenFlowSwitchNetDevice> swtch, uint64_t packet_uid, of
         }
       else
         {
-          type = ah->type; // ntohs(ah->type);
+          type = ah->type;
           VPortAction::Execute ((ofp_vport_action_type)type, buffer, key, ah);
         }
 
@@ -1047,7 +1119,7 @@ ValidateVPortActions (const ofp_action_header *actions, size_t actions_len)
           return OFPBAC_BAD_LEN;
         }
 
-      type = ntohs (ah->type);
+      type = ah->type;
       if (VPortAction::IsValidType ((ofp_vport_action_type)type)) // Validate "built-in" OpenFlow port table actions.
         {
           err = VPortAction::Validate ((ofp_vport_action_type)type, len, ah);

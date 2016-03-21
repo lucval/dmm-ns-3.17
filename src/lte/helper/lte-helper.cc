@@ -822,7 +822,6 @@ LteHelper::DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress,
                                 Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
   NS_LOG_FUNCTION (this << ue);
-  NS_LOG_UNCOND("handoverrrrrrrrrrrrrrrr");
 
   Ipv4Address identifierAddress = ue->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal ();
 
@@ -860,11 +859,8 @@ LteHelper::DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddre
                                              Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
   NS_LOG_FUNCTION (this << ue);
-  NS_LOG_UNCOND("handover with MME relocation");
 
   Ipv4Address identifierAddress = ue->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal ();
-
-  NS_LOG_UNCOND(identifierAddress);
 
   Ptr<NetDevice> ueDev = ue->GetDevice(0);
   Ptr<LteUeNetDevice> lteUeDev = ueDev->GetObject<LteUeNetDevice>();
@@ -881,8 +877,6 @@ LteHelper::DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddre
   UpdateArp(m_epcHelper->Attach(ueDev), m_epcHelper->m_mac);
 
   Ipv4Address locatorAddress = ue->GetObject<Ipv4> ()->GetAddress(1,1).GetLocal ();
-
-  NS_LOG_UNCOND(locatorAddress);
 
   /* create a dummy packet */
   Ptr<Packet> p = Create<Packet> ();
@@ -913,6 +907,7 @@ LteHelper::ReceiveFromMme(Ptr<Socket> sock)
 
     for(uint16_t h=0; h<m_controllerSocketVectorIn.size(); h++){
         m_controllerSocketVectorIn[h]->Send(p);
+        m_epcHelper->m_controller->CreateNwSetFieldAction(m_ingress[h], identifier, locator);
         m_signalingBytes = m_signalingBytes + OFP_MODIFY_STATE_SIZE;
     }
 
@@ -922,6 +917,7 @@ LteHelper::ReceiveFromMme(Ptr<Socket> sock)
     p->AddHeader(newHeader);
     m_controllerSocketMapEg[pgwIpHeader.GetSource()]->Send(p);
     Ptr<Node> egr = m_egress[pgwIpHeader.GetSource()];
+    m_epcHelper->m_controller->CreateNwSetFieldAction(egr, locator, identifier);
     m_signalingBytes = m_signalingBytes + OFP_MODIFY_STATE_SIZE;
 }
 

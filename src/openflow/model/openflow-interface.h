@@ -105,6 +105,7 @@ void update_checksums (ofpbuf *buffer, const sw_flow_key *key, uint32_t old_word
                                             | (1 << OFPPAT_SET_MPLS_LABEL)      \
                                             | (1 << OFPPAT_SET_MPLS_EXP) )      \
 
+
 namespace ns3 {
 
 class OpenFlowSwitchNetDevice;
@@ -249,6 +250,7 @@ struct Action
    * \param ah Action's data header.
    */
   static void Execute (ofp_action_type type, ofpbuf *buffer, sw_flow_key *key, const ofp_action_header *ah);
+
 };
 
 /**
@@ -338,6 +340,11 @@ struct SwitchPacketMetadata
   Address dst;             ///< Destination Address of the Packet when the Packet is received.
 };
 
+struct Acts
+{
+    std::map<sw_flow_key, sw_flow_actions*> map;
+};
+
 /**
  * \brief An interface for a Controller of OpenFlowSwitchNetDevices
  *
@@ -374,6 +381,10 @@ public:
    * \param buffer The message.
    */
   virtual void ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer)
+  {
+  }
+
+  virtual void InitFlows (Ptr<OpenFlowSwitchNetDevice> swtch, Mac48Address address, uint16_t port)
   {
   }
 
@@ -471,6 +482,10 @@ public:
 
   void ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer);
 
+  void InitFlows (Ptr<OpenFlowSwitchNetDevice> swtch, Mac48Address address, uint16_t port);
+
+  void CreateNwSetFieldAction (Ptr<Node> node, Ipv4Address identifier, Ipv4Address locator);
+
 protected:
   struct LearnedState
   {
@@ -478,8 +493,13 @@ protected:
   };
   Time m_expirationTime;                ///< Time it takes for learned MAC state entry/created flow to expire.
   typedef std::map<Mac48Address, LearnedState> LearnState_t;
-  LearnState_t m_learnState;            ///< Learned state data.
+  std::map<Ptr<OpenFlowSwitchNetDevice>, LearnState_t> m_learnState;    ///< Learned state data.
+  typedef std::pair<Ipv4Address, uint16_t> AddrToPort;
+  typedef std::map<Ipv4Address, AddrToPort> AddrToPair;
+  std::map<Ptr<Node>, AddrToPair> m_addr;
 };
+
+uint16_t GetDlPort(uint32_t id);
 
 /**
  * \brief Executes a list of flow table actions.
@@ -544,7 +564,7 @@ void ExecuteVendor (ofpbuf *buffer, const sw_flow_key *key, const ofp_action_hea
  */
 uint16_t ValidateVendor (const sw_flow_key *key, const ofp_action_header *ah, uint16_t len);
 
-/* 
+/*
  * From datapath.c
  * Buffers are identified to userspace by a 31-bit opaque ID.  We divide the ID
  * into a buffer number (low bits) and a cookie (high bits).  The buffer number

@@ -607,11 +607,26 @@ OpenFlowSwitchNetDevice::ReceiveFromDevice (Ptr<NetDevice> netdev, Ptr<const Pac
     {
       if (m_ports[i].netdev == netdev)
         {
-          if (packetType == PACKET_HOST && dst48 == m_address)
+        Ipv4Header head;
+        packet->PeekHeader(head);
+        if(GetNode()->GetObject<Ipv4>()->ContainsAddr(head.GetDestination())){
+	    for(uint64_t i=0; i<m_received.size(); i++){
+                if(packet->GetUid() == m_received.at(i))
+                    return;
+            }
+            m_received.push_back(packet->GetUid());
+
+            if (packetType != PACKET_OTHERHOST)
+              {
+                m_rxCallback (this, packet, protocol, src);
+              }
+            goto lookup;
+        }
+        else if (packetType == PACKET_HOST && dst48 == m_address)
             {
               m_rxCallback (this, packet, protocol, src);
             }
-          else if (packetType == PACKET_BROADCAST || packetType == PACKET_MULTICAST || packetType == PACKET_OTHERHOST)
+        else if (packetType == PACKET_BROADCAST || packetType == PACKET_MULTICAST || packetType == PACKET_OTHERHOST)
             {
               if (packetType == PACKET_OTHERHOST && dst48 == m_address)
                 {
@@ -623,27 +638,31 @@ OpenFlowSwitchNetDevice::ReceiveFromDevice (Ptr<NetDevice> netdev, Ptr<const Pac
                     {
                       m_rxCallback (this, packet, protocol, src);
                     }
-
-                  ofi::SwitchPacketMetadata data;
-                  data.packet = packet->Copy ();
-
-                  ofpbuf *buffer = BufferFromPacket (data.packet,src,dst,netdev->GetMtu (),protocol);
-                  m_ports[i].rx_packets++;
-                  m_ports[i].rx_bytes += buffer->size;
-                  data.buffer = buffer;
-                  uint32_t packet_uid = save_buffer (buffer);
-
-                  data.protocolNumber = protocol;
-                  data.src = Address (src);
-                  data.dst = Address (dst);
-                  m_packetData.insert (std::make_pair (packet_uid, data));
-
-                  RunThroughFlowTable (packet_uid, i);
+                    //goto lookup;
                 }
             }
 
-          break;
-        }
+        break;
+
+lookup:
+        ofi::SwitchPacketMetadata data;
+        data.packet = packet->Copy ();
+
+        ofpbuf *buffer = BufferFromPacket (data.packet,src,dst,netdev->GetMtu (),protocol);
+        m_ports[i].rx_packets++;
+        m_ports[i].rx_bytes += buffer->size;
+        data.buffer = buffer;
+        uint32_t packet_uid = save_buffer (buffer);
+
+        data.protocolNumber = protocol;
+        data.src = Address (src);
+        data.dst = Address (dst);
+        m_packetData.insert (std::make_pair (packet_uid, data));
+
+        RunThroughFlowTable (packet_uid, i);
+
+        break;
+      }
     }
 
   // Run periodic execution.
@@ -673,7 +692,7 @@ OpenFlowSwitchNetDevice::ReceiveFromDevice (Ptr<NetDevice> netdev, Ptr<const Pac
         for (int i = 0; i < 6; i++)
           str << (i!=0 ? ":" : "") << std::hex << f->key.flow.dl_dst[i]/16 << f->key.flow.dl_dst[i]%16;
         str <<  "] expired.";
-	
+
         NS_LOG_INFO (str.str ());
         SendFlowExpired (f, (ofp_flow_expired_reason)f->reason);
         list_remove (&f->node);
@@ -726,7 +745,14 @@ OpenFlowSwitchNetDevice::OutputPacket (uint32_t packet_uid, int out_port)
           ofi::SwitchPacketMetadata data = m_packetData.find (packet_uid)->second;
           size_t bufsize = data.buffer->size;
           NS_LOG_INFO ("Sending packet " << data.packet->GetUid () << " over port " << out_port);
-          if (p.netdev->SendFrom (data.packet->Copy (), data.src, data.dst, data.protocolNumber))
+          Ipv4Header head;
+          struct ip_header *nh = (struct ip_header *)data.buffer->l3;
+          data.packet->RemoveHeader(head);
+          if(head.GetDestination().Get()!=(ntohl(nh->ip_dst)))
+            head.SetDestination(Ipv4Address(ntohl(nh->ip_dst)));
+          data.packet->AddHeader(head);
+        //if (p.netdev->SendFrom (data.packet->Copy (), data.src, data.dst, data.protocolNumber))
+          if (p.netdev->SendFrom (data.packet->Copy (), data.src, GetBroadcast(), data.protocolNumber))
             {
               p.tx_packets++;
               p.tx_bytes += bufsize;
@@ -963,9 +989,15 @@ OpenFlowSwitchNetDevice::FlowTableLookup (sw_flow_key key, ofpbuf* buffer, uint3
       NS_LOG_INFO ("Flow not matched.");
 
       if (send_to_controller)
-        {
-          OutputControl (packet_uid, port, m_missSendLen, OFPR_NO_MATCH);
-        }
+      {
+        Ipv4Header head;
+        Ptr<Packet> p = m_packetData.find(packet_uid)->second.packet;
+        p->PeekHeader(head);
+        if(GetNode()->GetObject<Ipv4>()->ContainsAddr(head.GetDestination()))
+            OutputControl (packet_uid, port, m_missSendLen, OFPR_ACTION);
+        else
+            OutputControl (packet_uid, port, m_missSendLen, OFPR_NO_MATCH);
+       }
     }
 
   // Clean up; at this point we're done with the packet.
@@ -1223,6 +1255,7 @@ OpenFlowSwitchNetDevice::ReceiveVPortMod (const void *msg)
 int
 OpenFlowSwitchNetDevice::AddFlow (const ofp_flow_mod *ofm)
 {
+  NS_LOG_FUNCTION_NOARGS();
   size_t actions_len = ntohs (ofm->header.length) - sizeof *ofm;
 
   // Allocate memory.
@@ -1259,6 +1292,8 @@ OpenFlowSwitchNetDevice::AddFlow (const ofp_flow_mod *ofm)
   flow->byte_count = 0;
   flow->packet_count = 0;
   memcpy (flow->sf_acts->actions, ofm->actions, actions_len);
+
+  //m_acts.map[flow->key] = flow->sf_acts;
 
   // Act.
   int error = chain_insert (m_chain, flow);
@@ -1299,6 +1334,7 @@ OpenFlowSwitchNetDevice::AddFlow (const ofp_flow_mod *ofm)
 int
 OpenFlowSwitchNetDevice::ModFlow (const ofp_flow_mod *ofm)
 {
+  NS_LOG_FUNCTION_NOARGS();
   sw_flow_key key;
   flow_extract_match (&key, &ofm->match);
 
@@ -1577,6 +1613,16 @@ vport_table_t
 OpenFlowSwitchNetDevice::GetVPortTable ()
 {
   return m_vportTable;
+}
+
+void
+OpenFlowSwitchNetDevice::ModifyBuffer (uint64_t packet_uid, ofpbuf* buffer)
+{
+    ofi::SwitchPacketMetadata data = m_packetData.find (packet_uid)->second;
+    data.buffer = buffer;
+    m_packetData.erase (packet_uid);
+    m_packetData.insert (std::make_pair (packet_uid, data));
+    ofi::SwitchPacketMetadata data2 = m_packetData.find (packet_uid)->second;
 }
 
 } // namespace ns3

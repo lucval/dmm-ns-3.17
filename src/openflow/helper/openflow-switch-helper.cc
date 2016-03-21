@@ -56,6 +56,7 @@ OpenFlowSwitchHelper::Install (Ptr<Node> node, NetDeviceContainer c, Ptr<ns3::of
 
   NS_LOG_INFO ("**** Set up Controller");
   dev->SetController (controller);
+  dev->SetNode (node);
 
   for (NetDeviceContainer::Iterator i = c.Begin (); i != c.End (); ++i)
     {

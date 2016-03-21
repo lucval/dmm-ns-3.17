@@ -532,4 +532,10 @@ EpcHelper::GetLastRnti()
     return m_current;
 }
 
+void
+EpcHelper::InitOpenFlow(NetDeviceContainer ofDevs, Ptr<ns3::ofi::LearningController> controller) {
+    m_ofDevs.Add(ofDevs);
+    m_controller = controller;
+}
+
 } // namespace ns3
