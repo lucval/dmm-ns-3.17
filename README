@@ -10,6 +10,7 @@ Table of Contents:
 3) Running ns-3
 4) Getting access to the ns-3 documentation
 5) Working with the development version of ns-3
+6) Distributed Mobility Management
 
 Note:  Much more substantial information about ns-3 can be found at
 http://www.nsnam.org
@@ -115,3 +116,17 @@ familiar with it.
 If you have successfully installed mercurial, you can get
 a copy of the development version with the following command:
 "hg clone http://code.nsnam.org/ns-3-dev"
+
+6) Distributed Mobility Management
+----------------------------------
+
+This special version of ns-3 includes the code to support 
+Distributed Mobility Management solutions in the LTE network core.
+Three DMM solutions are already made available and implemented in
+the branches "double-nat" and "openflow" respectively.
+
+When switching between branches always re-build ns-3 to allow the
+correct configuration of the added features. Since each version
+requires a different set of configuration steps, it is recommended
+to use the deploy script which will configure and build the ns-3
+suite from scratch.
