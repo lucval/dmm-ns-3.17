@@ -1,0 +1,30 @@
+## -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; 
+
+def build(bld):
+    module = bld.create_ns3_module('http', ['internet', 'config-store', 'tools','applications'])
+    module.source = [
+         'model/http-client.cc',
+         'model/http-server.cc',
+         'model/http-controller.cc',
+         'model/http-random-variable.cc',
+         'model/http-distribution.cc',
+         'helper/http-helper.cc',
+        ]
+
+   ## module_test = bld.create_ns3_module_test_library('mms')
+   ## module_test.source = [
+   ##     'test/mms-client-server-test.cc',
+   ##     ]
+
+    headers = bld (features=['ns3header'])
+    headers.module = 'http'
+    headers.source = [
+        'model/http-client.h',
+        'model/http-server.h',
+        'model/http-controller.h',
+        'model/http-random-variable.h',
+        'model/http-distribution.h',
+        'helper/http-helper.h',
+        ]
+
+   # bld.ns3_python_bindings()
