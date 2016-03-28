@@ -822,7 +822,6 @@ LteHelper::DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress,
                                 Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
   NS_LOG_FUNCTION (this << ue);
-  NS_LOG_UNCOND("handoverrrrrrrrrrrrrrrr");
 
   Ipv4Address identifierAddress = ue->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal ();
 
@@ -860,11 +859,8 @@ LteHelper::DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddre
                                              Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
   NS_LOG_FUNCTION (this << ue);
-  NS_LOG_UNCOND("handover with MME relocation");
 
   Ipv4Address identifierAddress = ue->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal ();
-
-  NS_LOG_UNCOND(identifierAddress);
 
   Ptr<NetDevice> ueDev = ue->GetDevice(0);
   Ptr<LteUeNetDevice> lteUeDev = ueDev->GetObject<LteUeNetDevice>();
@@ -881,8 +877,6 @@ LteHelper::DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddre
   UpdateArp(m_epcHelper->Attach(ueDev), m_epcHelper->m_mac);
 
   Ipv4Address locatorAddress = ue->GetObject<Ipv4> ()->GetAddress(1,1).GetLocal ();
-
-  NS_LOG_UNCOND(locatorAddress);
 
   /* create a dummy packet */
   Ptr<Packet> p = Create<Packet> ();
