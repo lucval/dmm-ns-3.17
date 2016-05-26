@@ -409,12 +409,12 @@ EpcHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 
   // Add X2 interface to both eNBs' X2 entities
   Ptr<EpcX2> enb1X2 = enb1->GetObject<EpcX2> ();
-  Ptr<LteEnbNetDevice> enb1LteDev = enb1->GetDevice (3)->GetObject<LteEnbNetDevice> ();
+  Ptr<LteEnbNetDevice> enb1LteDev = enb1->GetDevice (2)->GetObject<LteEnbNetDevice> ();
   uint16_t enb1CellId = enb1LteDev->GetCellId ();
   NS_LOG_LOGIC ("LteEnbNetDevice #1 = " << enb1LteDev << " - CellId = " << enb1CellId);
 
   Ptr<EpcX2> enb2X2 = enb2->GetObject<EpcX2> ();
-  Ptr<LteEnbNetDevice> enb2LteDev = enb2->GetDevice (3)->GetObject<LteEnbNetDevice> ();
+  Ptr<LteEnbNetDevice> enb2LteDev = enb2->GetDevice (2)->GetObject<LteEnbNetDevice> ();
   uint16_t enb2CellId = enb2LteDev->GetCellId ();
   NS_LOG_LOGIC ("LteEnbNetDevice #2 = " << enb2LteDev << " - CellId = " << enb2CellId);
 

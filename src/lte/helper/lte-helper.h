@@ -41,8 +41,6 @@
 #include <ns3/arp-cache.h>
 #include <ns3/ipv4-interface.h>
 
-#define MAKE_PATH_SIZE 9+20+20
-#define OFP_MODIFY_STATE_SIZE 56+20+20
 
 namespace ns3 {
 
@@ -262,7 +260,7 @@ public:
   void HandoverRequest (Time hoTime, Ptr<NetDevice> ueDev, Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev);
 
   /**
-   * Trigger an S!-based handover of a UE between two P-GWs with or without MME relocation
+   * Trigger an S1-based handover of a UE between two P-GWs
    *
    * \param hoTime when the Handover is initiated
    * \param ue the UE that hands off
@@ -270,9 +268,6 @@ public:
    */
   void S1HandoverRequest (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress,
                           Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
-  void S1HandoverRequestMmeRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress,
-                                       Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
-
 
   /**
    * Call ActivateDataRadioBearer (ueDevice, bearer) for each UE
@@ -409,12 +404,6 @@ public:
   */
   int64_t AssignStreams (NetDeviceContainer c, int64_t stream);
 
-  void CreateController (Ptr<Node> controller);
-  void ConnectSocketsIngress (Ptr<Node> ofNode, Ipv4Address ofNodeAddress);
-  void ConnectSocketsEgress (Ptr<Node> ofNode, Ipv4Address egressAddress, Ipv4Address pgwAddress);
-  void AttachMme (Ptr<Node> mme, Ipv4Address pgwAddress);
-  void ConnectMmes(Ptr<Node> source, Ptr<Node> destination, Ipv4Address tPgwAddress);
-
   void InitArp(Ptr<ArpCache> arp, NodeContainer n);
   void UpdateArp(Ipv4Address ipAddr, Mac48Address addr);
 
@@ -430,11 +419,6 @@ private:
 
   void DoHandoverRequest (Ptr<NetDevice> ueDev, Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev);
   void DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
-  void DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddress, Ptr<NetDevice> sourceEnb,
-                                         Ptr<NetDevice> targetEnb);
-
-  void ReceiveFromMme (Ptr<Socket> sock);
-  void ReceiveFromSourceMme (Ptr<Socket> sock);
 
   Ptr<SpectrumChannel> m_downlinkChannel;
   Ptr<SpectrumChannel> m_uplinkChannel;
@@ -468,18 +452,6 @@ private:
 
   uint64_t m_imsiCounter;
   uint16_t m_cellIdCounter;
-
-  /*mme stuffs*/
-  uint16_t m_mmePort;
-  std::map<Ipv4Address, Ptr<Socket> > m_mmeMap;
-  std::map<Ipv4Address, Ptr<Socket> > m_mmeSourceMap;
-
-  /*controller stuffs*/
-  Ptr<Node> m_controller;
-  std::map<Ipv4Address, Ptr<Socket> > m_controllerSocketMapEg;
-  std::vector <Ptr<Socket> > m_controllerSocketVectorIn;
-  std::map<Ipv4Address, Ptr<Node> > m_egress;
-  std::vector <Ptr<Node> > m_ingress;
 
   /* arp stuffs */
   NodeContainer m_arpNodes;
