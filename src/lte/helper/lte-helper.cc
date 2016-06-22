@@ -766,19 +766,19 @@ LteHelper::HandoverRequest (Time hoTime, Ptr<NetDevice> ueDev, Ptr<NetDevice> so
 }
 
 void
-LteHelper::S1HandoverRequest (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb)
+LteHelper::HandoverRequestWithPgwRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb)
 {
   NS_LOG_FUNCTION (this << ue);
   NS_ASSERT_MSG (m_epcHelper, "Handover requires the use of the EPC - did you forget to call LteHelper::SetEpcHelper () ?");
-  Simulator::Schedule (hoTime, &LteHelper::DoS1HandoverRequest, this, ue, pgwAddress, sourceEnb, targetEnb);
+  Simulator::Schedule (hoTime, &LteHelper::DoHandoverRequestWithPgwRelocation, this, ue, pgwAddress, sourceEnb, targetEnb);
 }
 
 void
-LteHelper::S1HandoverRequestMmeRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb)
+LteHelper::HandoverRequestWithPgwAndMmeRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb)
 {
   NS_LOG_FUNCTION (this << ue);
   NS_ASSERT_MSG (m_epcHelper, "Handover requires the use of the EPC - did you forget to call LteHelper::SetEpcHelper () ?");
-  Simulator::Schedule (hoTime, &LteHelper::DoS1HandoverRequestMmeRelocation, this, ue, pgwAddress, sourceEnb, targetEnb);
+  Simulator::Schedule (hoTime, &LteHelper::DoHandoverRequestWithPgwAndMmeRelocation, this, ue, pgwAddress, sourceEnb, targetEnb);
 }
 
 void
@@ -818,7 +818,7 @@ LteHelper::DoHandoverRequest (Ptr<NetDevice> ueDev, Ptr<NetDevice> sourceEnbDev,
 }
 
 void
-LteHelper::DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress,
+LteHelper::DoHandoverRequestWithPgwRelocation (Ptr<Node> ue, Ipv4Address pgwAddress,
                                 Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
   NS_LOG_FUNCTION (this << ue);
@@ -855,8 +855,8 @@ LteHelper::DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress,
 }
 
 void
-LteHelper::DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddress,
-                                             Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
+LteHelper::DoHandoverRequestWithPgwAndMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddress,
+                                Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
   NS_LOG_FUNCTION (this << ue);
 
