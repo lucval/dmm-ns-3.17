@@ -765,11 +765,11 @@ LteHelper::HandoverRequest (Time hoTime, Ptr<NetDevice> ueDev, Ptr<NetDevice> so
 }
 
 void
-LteHelper::S1HandoverRequest (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
+LteHelper::HandoverRequestWithPgwRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
   NS_LOG_FUNCTION (this << ue);
   NS_ASSERT_MSG (m_epcHelper, "Handover requires the use of the EPC - did you forget to call LteHelper::SetEpcHelper () ?");
-  Simulator::Schedule (hoTime, &LteHelper::DoS1HandoverRequest, this, ue, pgwAddress, sourceEnbDev, targetEnbDev);
+  Simulator::Schedule (hoTime, &LteHelper::DoHandoverRequestWithPgwRelocation, this, ue, pgwAddress, sourceEnbDev, targetEnbDev);
 }
 
 void
@@ -809,7 +809,7 @@ LteHelper::DoHandoverRequest (Ptr<NetDevice> ueDev, Ptr<NetDevice> sourceEnbDev,
 }
 
 void
-LteHelper::DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress,
+LteHelper::DoHandoverRequestWithPgwRelocation (Ptr<Node> ue, Ipv4Address pgwAddress,
                                 Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
   NS_LOG_FUNCTION (this << ue);

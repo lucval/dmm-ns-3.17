@@ -902,7 +902,7 @@ main (int argc, char *argv[])
   {
     double hoTime = TriggerHO(radius, x->GetValue()) + 7.5;
     out << "handover UE " << lteVoiceUeContainerHO.Get(i)->GetId() << " at " << hoTime << " seconds" << endl;
-    lteHelper->S1HandoverRequest (Seconds(hoTime), lteVoiceUeContainerHO.Get(i),
+    lteHelper->HandoverRequestWithPgwRelocation (Seconds(hoTime), lteVoiceUeContainerHO.Get(i),
                                   epcHelper2->GetUeDefaultGatewayAddress(), enbLteDevs.Get(0), enbLteDevs2.Get(0));
   }
 
