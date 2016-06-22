@@ -262,16 +262,16 @@ public:
   void HandoverRequest (Time hoTime, Ptr<NetDevice> ueDev, Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev);
 
   /**
-   * Trigger an S!-based handover of a UE between two P-GWs with or without MME relocation
+   * Trigger an X2-based handover of a UE between two eNBs with a PGW relocation with or without MME relocation
    *
    * \param hoTime when the Handover is initiated
    * \param ue the UE that hands off
    * \param ueCopy copy of the original UE in the new EPC
    */
-  void S1HandoverRequest (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress,
-                          Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
-  void S1HandoverRequestMmeRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress,
-                                       Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
+  void HandoverRequestWithPgwRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress,
+        	                  Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
+  void HandoverRequestWithPgwAndMmeRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress,
+	                          Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
 
 
   /**
@@ -429,9 +429,8 @@ private:
   Ptr<NetDevice> InstallSingleUeDevice (Ptr<Node> n);
 
   void DoHandoverRequest (Ptr<NetDevice> ueDev, Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev);
-  void DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
-  void DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddress, Ptr<NetDevice> sourceEnb,
-                                         Ptr<NetDevice> targetEnb);
+  void DoHandoverRequestWithPgwRelocation (Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
+  void DoHandoverRequestWithPgwAndMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
 
   void ReceiveFromMme (Ptr<Socket> sock);
   void ReceiveFromSourceMme (Ptr<Socket> sock);
