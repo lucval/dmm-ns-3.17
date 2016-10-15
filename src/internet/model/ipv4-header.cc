@@ -425,7 +425,6 @@ Ipv4Header::Deserialize (Buffer::Iterator start)
   uint8_t verIhl = i.ReadU8 ();
   uint8_t ihl = verIhl & 0x0f; 
   uint16_t headerSize = ihl * 4;
-  NS_ASSERT ((verIhl >> 4) == 4);
   m_tos = i.ReadU8 ();
   uint16_t size = i.ReadNtohU16 ();
   m_payloadSize = size - headerSize;
